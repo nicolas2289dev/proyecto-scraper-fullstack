@@ -72,7 +72,6 @@ public class ProductoTiendaServiceImpl implements ProductoTiendaService {
         pt.setProducto(producto);
         pt.setSupermercado(supermercado);
         pt.setUrlEspecifica(dto.getUrlEspecifica());
-        pt.setCodigoExterno(dto.getCodigoExterno());
         pt.setUrlImagen(dto.getUrlImagen());
         
         return mapToDto(productoTiendaRepository.save(pt));
@@ -93,7 +92,6 @@ public class ProductoTiendaServiceImpl implements ProductoTiendaService {
         pt.setProducto(producto);
         pt.setSupermercado(supermercado);
         pt.setUrlEspecifica(dto.getUrlEspecifica());
-        pt.setCodigoExterno(dto.getCodigoExterno());
         pt.setUrlImagen(dto.getUrlImagen());
         
         return mapToDto(productoTiendaRepository.save(pt));
@@ -118,7 +116,6 @@ public class ProductoTiendaServiceImpl implements ProductoTiendaService {
                 pt.getSupermercado().getNombre(),
                 pt.getSupermercado().getUrlBase(),
                 pt.getUrlEspecifica(),
-                pt.getCodigoExterno(),
                 pt.getUrlImagen()
         );
     }

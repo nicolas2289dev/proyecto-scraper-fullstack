@@ -25,7 +25,5 @@ public class ProductoTiendaDto {
 
     private String urlEspecifica;
 
-    private String codigoExterno;
-
     private String urlImagen;
 }

@@ -9,5 +9,4 @@ public interface ProductoTiendaRepository extends JpaRepository<ProductoTienda, 
     List<ProductoTienda> findByProductoId(Long productoId);
     List<ProductoTienda> findBySupermercadoId(Long supermercadoId);
     Optional<ProductoTienda> findByProductoIdAndSupermercadoId(Long productoId, Long supermercadoId);
-    Optional<ProductoTienda> findByCodigoExternoAndSupermercadoId(String codigoExterno, Long supermercadoId);
 }

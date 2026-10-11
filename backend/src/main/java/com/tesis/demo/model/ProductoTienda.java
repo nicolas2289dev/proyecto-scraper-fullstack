@@ -28,7 +28,4 @@ public class ProductoTienda {
 
     @Column(name = "url_imagen", columnDefinition = "TEXT")
     private String urlImagen;
-
-    @Column(name = "codigo_externo", length = 100)
-    private String codigoExterno;
 }
