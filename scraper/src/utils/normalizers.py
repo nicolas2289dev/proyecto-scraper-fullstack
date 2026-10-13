@@ -116,6 +116,40 @@ def parse_weight(text: str) -> Dict[str, Optional[object]]:
 
     return {"peso_valor": peso_valor, "peso_unidad": peso_unidad}
 
+
+_UI_NOISE_PATTERN = re.compile(
+    r"\b(?:no\s+disponible|disponible|agregar|agotado|oferta|descuento)\b",
+    re.IGNORECASE,
+)
+
+
+def clean_title(text: Optional[str]) -> str:
+    """
+    Limpia el título crudo de una tarjeta de producto del DOM.
+
+    Quita elementos de interfaz que no pertenecen al nombre del producto
+    ("Disponible", "Agregar", precios con '$', descuentos tipo "-20%" o "20% off"),
+    deduplica palabras contiguas idénticas (ej: "Swift Swift" -> "Swift")
+    y colapsa saltos de línea y espacios.
+
+    Examples:
+        >>> clean_title("Picadillo Swift 90 gr\\nDisponible\\n$ 1.280,00\\nAgregar")
+        'Picadillo Swift 90 gr'
+        >>> clean_title("Picadillo Swift Swift de Carne 90 gr")
+        'Picadillo Swift de Carne 90 gr'
+    """
+    if not text:
+        return ""
+
+    cleaned = re.sub(r"\$[\s\u00a0]*[\d.,]+", " ", text)
+    cleaned = re.sub(r"-\d+%", " ", cleaned)
+    cleaned = re.sub(r"\b\d+%\s*(?:off|dto|desc\w*)", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = _UI_NOISE_PATTERN.sub(" ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    # Deduplicar palabras contiguas idénticas (case-insensitive)
+    cleaned = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 def clean_price(price_str: Optional[str]) -> Optional[float]:
     """
     Normaliza una cadena de texto que representa un precio y la convierte en float.
