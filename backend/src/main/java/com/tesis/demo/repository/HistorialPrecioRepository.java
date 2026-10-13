@@ -51,7 +51,7 @@ public interface HistorialPrecioRepository extends JpaRepository<HistorialPrecio
     List<ProductoBusquedaDto> buscarProductos(@Param("nombre") String nombre, @Param("supermercadoId") Long supermercadoId);
 
     @Query("SELECT new com.tesis.demo.dto.ProductoBusquedaDto(" +
-           "pt.id, p.marca, p.nombreGenerico, c.nombre, p.pesoUnidad, p.pesoValor, " +
+           "p.id, p.marca, p.nombreGenerico, c.nombre, p.pesoUnidad, p.pesoValor, " +
            "p.varianteEspecifica, pt.urlEspecifica, s.nombre, pt.urlImagen, hp.precio) " +
            "FROM HistorialPrecio hp " +
            "JOIN hp.productoTienda pt " +

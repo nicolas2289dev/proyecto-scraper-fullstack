@@ -46,12 +46,15 @@ public class ProductoBusquedaDto {
     }
 
     private static String formatPeso(Double pesoValor, String pesoUnidad) {
+        String unidad = (pesoUnidad == null || pesoUnidad.isBlank()) ? "" : pesoUnidad.trim();
+
         if (pesoValor == null || pesoValor == 0) {
-            return null;
+            return unidad.isBlank() ? null : unidad;
         }
 
-        String unidad = (pesoUnidad == null || pesoUnidad.isBlank()) ? "" : pesoUnidad.trim();
-        String valorFormateado = String.valueOf(pesoValor);
+        String valorFormateado = (pesoValor % 1 == 0)
+                ? String.valueOf(pesoValor.longValue())
+                : String.valueOf(pesoValor);
 
         if (unidad.isBlank()) {
             return valorFormateado;

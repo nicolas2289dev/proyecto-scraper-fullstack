@@ -17,10 +17,10 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${security.jwt.secret:${JWT_SECRET:change_me_in_env}}")
+    @Value("${security.jwt.secret:${JWT_SECRET:SWN+ACqAfghCQn7nbrerWbLITnWtaDnfiUJLWizuvUE=}}")
     private String secret;
 
-    @Value("${security.jwt.expiration-seconds:3600}")
+    @Value("${security.jwt.expiration-seconds:${JWT_TIME_EXPIRATION:86400}}")
     private long expirationSeconds;
 
     public String generateToken(String subject, Map<String, Object> claims) {

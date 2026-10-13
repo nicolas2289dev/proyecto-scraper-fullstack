@@ -21,4 +21,11 @@ public interface IngestaService {
      * @return Resumen estadístico de la operación.
      */
     IngestaResultadoDto procesarIngestaMasiva(List<ItemIngestaDto> items);
+
+    /**
+     * Limpia todo el catálogo de productos (historial de precios, items de lista,
+     * productos por tienda, productos maestros y diccionario de marcas)
+     * para permitir una re-ingesta limpia desde cero.
+     */
+    void reiniciarCatalogo();
 }

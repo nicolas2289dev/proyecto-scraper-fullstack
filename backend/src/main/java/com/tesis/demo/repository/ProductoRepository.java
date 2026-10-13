@@ -34,6 +34,12 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     @Query("SELECT p FROM Producto p WHERE LOWER(p.nombreGenerico) = LOWER(CAST(:nombreGenerico AS string))")
     List<Producto> findAllByNombreGenericoIgnoreCase(@Param("nombreGenerico") String nombreGenerico);
 
+    /** Busca el producto maestro por código de barras (EAN/GTIN). */
+    java.util.Optional<Producto> findByEan(String ean);
+
+    /** Busca el producto maestro por su huella determinista dentro de una categoría. */
+    java.util.Optional<Producto> findByCategoriaIdAndClaveNormalizada(Long categoriaId, String claveNormalizada);
+
     /**
      * Verifica si ya existe un producto con los mismos atributos atómicos y categoría.
      */

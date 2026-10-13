@@ -1,5 +1,31 @@
 # Historial de tareas ejecutadas
 
+## [v2.5] - Unificación de Catálogo Maestro y Normalización Robusta
+- **Unificación Multitienda:**
+  - Implementado modelo de catálogo unificado: un único registro físico en la tabla `productos` vinculado a múltiples ofertas en `productos_tienda`.
+  - Agregado soporte para código de barras `ean` en `Producto` y restricción única `uk_productos_ean`.
+  - Creada columna `clave_normalizada` e índice único compuesto `(categoria_id, clave_normalizada)` para garantizar la deduplicación a nivel de base de datos.
+  - Agregada restricción única `(producto_id, supermercado_id)` en `productos_tienda`.
+  - Corregido `HistorialPrecioRepository.buscarProductosConPrecios` para seleccionar directamente `p.id` (ID del producto maestro), permitiendo que la adición a listas de compras vincule al producto maestro correcto.
+- **Normalización Inteligente por Tokens (Independiente del Orden):**
+  - Refactorizado `NormalizacionServiceImpl` para aislar marca y variante sin depender del orden de los términos en el título (ej: "Picadillo De Carne Swift" asigna marca "Swift" y variante "Carne", corrigiendo el fallo previo de Vea donde asignaba marca "Carne").
+  - Canonización de pesos y volúmenes: conversión automática a unidades base (`1 kg == 1000 g`, `1.5 l == 1500 ml`), eliminando discrepancias de formato entre tiendas.
+  - Creada nueva entidad `Marca` y `MarcaRepository` para gestionar el diccionario de marcas en base de datos.
+- **Pipeline de Ingesta Masiva y Reinicio:**
+  - `IngestaServiceImpl` resuelve el producto maestro mediante un esquema jerárquico de 3 niveles: (1) coincidencia exacta por EAN, (2) huella determinista por clave normalizada, (3) similitud tolerante Jaro-Winkler sobre la marca sin contradicción de EAN.
+  - Auto-aprendizaje de marcas: las marcas informadas por las tiendas se incorporan dinámicamente al diccionario `marcas`.
+  - Añadido endpoint administrativo `POST /api/v1/extractor/reiniciar-catalogo` para purgar limpiamente el catálogo (`historial_precios`, `items_lista`, `productos_tienda`, `productos`, `marcas`) y permitir re-ingestas desde cero.
+- **Pruebas:**
+  - Creado `NormalizacionServiceTest` con 13 pruebas unitarias sobre títulos reales de Comodín, Día y Vea.
+  - Creado `IngestaServiceUnificacionTest` con 7 pruebas de integración en memoria para verificar unificación multitienda e idempotencia.
+
+## [v2.4] - Filtro Dinámico por Marca
+- **Endpoints:**
+  - Se modificó `GET /api/v1/productos/busqueda` para aceptar el query param opcional `marca` y filtrar los resultados.
+  - Se añadió `GET /api/v1/productos/busqueda/marcas` para obtener la lista de marcas únicas disponibles, permitiendo llenar listas desplegables dependientes de la búsqueda activa.
+- **Repositorio:**
+  - Se añadió lógica en `HistorialPrecioRepository` para extraer las marcas únicas filtradas (`obtenerMarcasDisponibles`).
+
 ## [v2.3] - Panel de Administración, Seguridad y Endpoints de Búsqueda
 - **Seguridad y Permisos:** 
   - Se habilitaron como públicos los endpoints de lectura (`GET`) para productos, precios y supermercados.

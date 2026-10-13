@@ -2,6 +2,8 @@ package com.tesis.demo.service;
 
 import com.tesis.demo.dto.ItemListaCreateDto;
 import com.tesis.demo.dto.ItemListaDto;
+import com.tesis.demo.exception.ConflictException;
+import com.tesis.demo.exception.ResourceNotFoundException;
 import com.tesis.demo.model.ItemLista;
 import com.tesis.demo.model.ListaCompra;
 import com.tesis.demo.model.Producto;
@@ -28,13 +30,13 @@ public class ItemListaServiceImpl implements ItemListaService {
     public ItemListaDto agregarItem(Long listaId, String userEmail, ItemListaCreateDto dto) {
         ListaCompra lista = getListaAndCheckOwner(listaId, userEmail);
 
-        itemListaRepository.findByListaCompraIdAndProductoId(listaId, dto.getProductoId())
-                .ifPresent(existing -> {
-                    throw new RuntimeException("Ese producto ya existe en la lista");
-                });
+        boolean existeEnLaLista = itemListaRepository.existsByListaCompraIdAndProductoId(listaId, dto.getProductoId());
+        if(existeEnLaLista) {
+            throw new ConflictException("El producto ya existe en la lista");
+        }
 
         Producto producto = productoRepository.findById(dto.getProductoId())
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
         ItemLista itemLista = new ItemLista();
         itemLista.setListaCompra(lista);
