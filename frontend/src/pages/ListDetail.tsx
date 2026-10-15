@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { Dialog } from 'primereact/dialog'
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { listaApi } from '../api/listaApi'
 import type { ListaCompraDetalle, OptimizacionCompra } from '../types/Supermercado'
+import { Button } from 'primereact/button'
 
 export default function ListDetail() {
   const { id } = useParams<{ id: string }>()
@@ -10,6 +13,12 @@ export default function ListDetail() {
   const [loading, setLoading] = useState(true)
   const [optimizing, setOptimizing] = useState(false)
   const [optimizationResult, setOptimizationResult] = useState<OptimizacionCompra | null>(null)
+  const [errorModal, setErrorModal] = useState<{visible:boolean,title:string,message:string,severity:'warning'|'info'|'error'}>({
+    visible: false,
+    title: '',
+    message: '',
+    severity: 'error',
+  })
 
   const listaId = Number(id)
 
@@ -20,7 +29,7 @@ export default function ListDetail() {
       setList(data)
     } catch (err) {
       console.error('Error fetching list detail:', err)
-      alert('Error al cargar el detalle de la lista')
+      setErrorModal({ visible: true, title: 'Error', message: 'Error al cargar el detalle de la lista', severity: 'error' })
       navigate('/mis-listas')
     } finally {
       setLoading(false)
@@ -38,22 +47,37 @@ export default function ListDetail() {
       setOptimizationResult(result)
     } catch (err) {
       console.error('Error optimizing list:', err)
-      alert('Error al optimizar la lista')
+      setErrorModal({ visible: true, title: 'Error', message: 'Error al optimizar la lista', severity: 'error' })
     } finally {
       setOptimizing(false)
     }
   }
 
-  const removeItem = async (itemId: number) => {
-    if (!confirm('¿Quitar este producto de la lista?')) return
-    try {
-      await listaApi.removeItem(listaId, itemId)
-      setOptimizationResult(null)
-      fetchListDetail()
-    } catch (err) {
-      console.error('Error eliminando item:', err)
-      alert('Error al eliminar el ítem')
-    }
+  const removeItem = (itemId: number, productoNombre?: string) => {
+    confirmDialog({
+      message: productoNombre
+        ? `¿Estás seguro de que deseas quitar "${productoNombre}" de tu lista?`
+        : '¿Estás seguro de que deseas quitar este producto de tu lista?',
+      header: 'Quitar producto',
+      icon: 'pi pi-trash',
+      defaultFocus: 'reject',
+      acceptClassName: 'confirm-dialog-accept-btn',
+      rejectClassName: 'confirm-dialog-reject-btn',
+      acceptLabel: 'Quitar',
+      rejectLabel: 'Cancelar',
+      className: 'modern-confirm-dialog',
+      maskClassName: 'modern-dialog-mask',
+      accept: async () => {
+        try {
+          await listaApi.removeItem(listaId, itemId)
+          setOptimizationResult(null)
+          fetchListDetail()
+        } catch (err) {
+          console.error('Error eliminando item:', err)
+          setErrorModal({ visible: true, title: 'Error', message: 'Error al eliminar el ítem de la lista', severity: 'error' })
+        }
+      }
+    })
   }
 
   if (loading) return <div className="container"><p>Cargando detalle...</p></div>
@@ -130,7 +154,7 @@ export default function ListDetail() {
                       <td style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>{item.supermercadoNombre}</td>
                       <td style={{ padding: '0.75rem' }}>
                         <button
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.id, item.productoNombre)}
                           style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.5rem', fontWeight: '700' }}
                           title="Quitar producto"
                         >
@@ -174,7 +198,7 @@ export default function ListDetail() {
                 <p style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, color: '#22c55e' }}>${optimizationResult.totalAhorrado.toLocaleString('es-AR')}</p>
               </div>
               <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #fee2e2' }}>
-                <span style={{ fontSize: '0.875rem', color: '#991b1b' }}>Total más caro</span>
+                <span style={{ fontSize: '0.875rem', color: '#991b1b' }}>Total Lista (Original)</span>
                 <p style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, color: '#dc2626' }}>${optimizationResult.totalMasCaro.toLocaleString('es-AR')}</p>
               </div>
             </div>
@@ -217,6 +241,174 @@ export default function ListDetail() {
           </section>
         )}
       </div>
+
+      
+
+      <style>{`
+        /* PrimeReact ConfirmDialog Modern & Elegant Styles */
+        .modern-dialog-mask {
+          background-color: rgba(15, 23, 42, 0.45) !important;
+          backdrop-filter: blur(5px) !important;
+          -webkit-backdrop-filter: blur(5px) !important;
+        }
+
+        .modern-confirm-dialog.p-dialog {
+          width: 90vw;
+          max-width: 440px;
+          background: #ffffff;
+          border-radius: 20px;
+          box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.05);
+          border: none;
+          overflow: hidden;
+        }
+
+        [data-theme='dark'] .modern-confirm-dialog.p-dialog {
+          background: #1e293b;
+          box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .modern-confirm-dialog .p-dialog-header {
+          padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+          background: transparent;
+          border: none;
+          display: flex;
+          align-items: center;
+        }
+
+        .modern-confirm-dialog .p-dialog-header .p-dialog-title {
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: var(--text-dark);
+          letter-spacing: -0.01em;
+        }
+
+        .modern-confirm-dialog .p-dialog-header-icons {
+          margin-left: auto;
+        }
+
+        .modern-confirm-dialog .p-dialog-header-close {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .modern-confirm-dialog .p-dialog-header-close:hover {
+          background: rgba(0, 0, 0, 0.05);
+          color: var(--text-dark);
+        }
+
+        .modern-confirm-dialog .p-dialog-content {
+          padding: 0.75rem 1.5rem 1.5rem 1.5rem;
+          background: transparent;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .modern-confirm-dialog .p-confirm-dialog-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: #fee2e2;
+          color: #dc2626;
+          border: 1px solid #fecaca;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          flex-shrink: 0;
+        }
+
+        .modern-confirm-dialog .p-confirm-dialog-message {
+          font-size: 0.95rem;
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin: 0;
+        }
+
+        .modern-confirm-dialog .p-dialog-footer {
+          padding: 1rem 1.5rem;
+          background: #f8fafc;
+          border-top: 1px solid rgba(226, 232, 240, 0.8);
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.75rem;
+        }
+
+        [data-theme='dark'] .modern-confirm-dialog .p-dialog-footer {
+          background: rgba(15, 23, 42, 0.4);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .confirm-dialog-reject-btn.p-button {
+          background: #e2e8f0;
+          border: 1px solid #cbd5e1;
+          color: #334155;
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 0.6rem 1.25rem;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          outline: none;
+        }
+
+        .confirm-dialog-reject-btn.p-button:hover {
+          background: #cbd5e1;
+          color: #0f172a;
+        }
+
+        .confirm-dialog-accept-btn.p-button {
+          background: #dc2626;
+          border: 1px solid #dc2626;
+          color: #ffffff;
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 0.6rem 1.25rem;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+          outline: none;
+        }
+
+        .confirm-dialog-accept-btn.p-button:hover {
+          background: #b91c1c;
+          border-color: #b91c1c;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.45);
+        }
+
+        .confirm-dialog-accept-btn.p-button:active {
+          transform: translateY(0);
+        }
+      `}</style>
+      {/* Error Modal */}
+      <Dialog
+        header={errorModal.title}
+        visible={errorModal.visible}
+        style={{ width: '90vw', maxWidth: '420px' }}
+        className="modern-confirm-dialog"
+        maskClassName="modern-dialog-mask"
+        onHide={() => setErrorModal(prev => ({ ...prev, visible: false }))}
+        modal
+      >
+        <p className="p-confirm-dialog-message" style={{ margin: '1rem 0' }}>{errorModal.message}</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+          <Button label="Entendido" className="confirm-dialog-reject-btn" onClick={() => setErrorModal(prev => ({ ...prev, visible: false }))} />
+        </div>
+      </Dialog>
+
+      {/* Modern Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   )
 }

@@ -31,10 +31,10 @@ export const listaApi = {
     return response.data.data
   },
 
-  addItem: async (listaId: number, productoId: number, cantidad: number): Promise<ItemLista> => {
+  addItem: async (listaId: number, productoId: number, cantidad: number, supermercadoId?: number): Promise<ItemLista> => {
     const response = await axiosInstance.post<ApiResponse<ItemLista>>(
       `/listas/${listaId}/items`,
-      { productoId, cantidad }
+      { productoId, cantidad, supermercadoId }
     )
     return response.data.data
   },

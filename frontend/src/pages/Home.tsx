@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Dialog } from 'primereact/dialog'
+import { Button } from 'primereact/button'
 import type { Supermercado, ProductoBusqueda, ListaCompra } from '../types/Supermercado'
 import { productoApi } from '../api/productoApi'
 import { supermercadoApi } from '../api/supermercadoApi'
@@ -31,10 +33,35 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<ProductoBusqueda | null>(null)
   const [selectedListId, setSelectedListId] = useState<number | string>('')
+  const [selectedSupermarketId, setSelectedSupermarketId] = useState<number | string>('')
   const [quantity, setQuantity] = useState(1)
   const [listOptions, setListOptions] = useState<ListaCompra[]>([])
   const [adding, setAdding] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean
+    title: string
+    message: string
+    severity: 'warning' | 'info' | 'error'
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    severity: 'warning',
+  })
+
+  const showAlert = (title: string, message: string, severity: 'warning' | 'info' | 'error' = 'warning') => {
+    setAlertModal({
+      visible: true,
+      title,
+      message,
+      severity,
+    })
+  }
+
+  const hideAlert = () => {
+    setAlertModal((prev) => ({ ...prev, visible: false }))
+  }
 
   const searchDebounceRef = useRef<number | null>(null)
 
@@ -90,7 +117,7 @@ export default function Home() {
       setProducts(result.items)
       setTotalPages(result.totalPages)
       setTotalElements(result.totalElements)
-      
+
       // Si estamos en la primera página y no hay filtro de marca activo, recargar las marcas disponibles
       if (pageNumber === 0 && marca === 'all') {
         const marcas = await productoApi.obtenerMarcas(nombre || undefined, sid)
@@ -112,7 +139,7 @@ export default function Home() {
   useEffect(() => {
     if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
     searchDebounceRef.current = window.setTimeout(() => {
-      setAppliedSearch(searchTerm)
+      setAppliedSearch(searchTerm.trim())
     }, 400)
     return () => {
       if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
@@ -141,9 +168,25 @@ export default function Home() {
       navigate('/login')
       return
     }
+    refreshLists()
     setSelectedProduct(product)
     setSelectedListId(listOptions.length ? listOptions[0].id : '')
     setQuantity(1)
+
+    // Preseleccionar el supermercado del producto o del filtro activo
+    const matched = supermarkets.find(
+      (s) => s.nombre.trim().toLowerCase() === product.nombreSupermercado?.trim().toLowerCase()
+    )
+    if (matched) {
+      setSelectedSupermarketId(matched.id)
+    } else if (filterSupermarket !== 'all') {
+      setSelectedSupermarketId(Number(filterSupermarket))
+    } else if (supermarkets.length > 0) {
+      setSelectedSupermarketId(supermarkets[0].id)
+    } else {
+      setSelectedSupermarketId('')
+    }
+
     setShowModal(true)
     setSuccessMsg(null)
   }
@@ -151,10 +194,24 @@ export default function Home() {
   const handleAddToList = async () => {
     if (!selectedProduct || selectedListId === '') return
 
+    // Obtener el ID del supermercado: primero del modal, o por coincidencia con el producto, o del filtro
+    const matchedSuper = supermarkets.find(
+      (s) => s.nombre.trim().toLowerCase() === selectedProduct.nombreSupermercado?.trim().toLowerCase()
+    )
+    const finalSupermercadoId = selectedSupermarketId !== ''
+      ? Number(selectedSupermarketId)
+      : (matchedSuper?.id ?? (filterSupermarket !== 'all' ? Number(filterSupermarket) : undefined))
+
+    if (!finalSupermercadoId) {
+      showAlert('Seleccionar supermercado', 'Debe seleccionar un supermercado antes de agregar el producto.', 'warning')
+      return
+    }
+
     setAdding(true)
     try {
       let productId = selectedProduct.id
       const listaId = Number(selectedListId)
+      const supermercadoId = finalSupermercadoId
 
       // Si el ID es inválido (producto comparativo), buscar por nombre
       if (productId <= 0) {
@@ -163,13 +220,13 @@ export default function Home() {
           productId = prods[0].id
         } else {
           console.error('Producto no encontrado en búsqueda:', selectedProduct.nombreGenerico)
-          alert('No se encontró el producto para agregarlo a la lista.')
+          showAlert('Producto no encontrado', 'No se encontró el producto para agregarlo a la lista.', 'warning')
           setAdding(false)
           return
         }
       }
 
-      await listaApi.addItem(listaId, productId, quantity)
+      await listaApi.addItem(listaId, productId, quantity, supermercadoId)
       setSuccessMsg(`"${selectedProduct.nombreGenerico}" agregado correctamente.`)
       setTimeout(() => {
         setShowModal(false)
@@ -177,7 +234,7 @@ export default function Home() {
       }, 1200)
     } catch (err) {
       console.error('Error agregando item a la lista:', err)
-      alert('No se pudo agregar el producto a la lista.')
+      showAlert('Producto ya existente', 'Este producto ya existe en tu lista.', 'info')
     } finally {
       setAdding(false)
     }
@@ -208,7 +265,7 @@ export default function Home() {
           <div className="search-container">
             <input
               type="text"
-              placeholder="¿Qué estás buscando hoy? (ej: fideo, arroz, aceite)"
+              placeholder="¿Qué estás buscando hoy? (ej: fideos, arroz, aceite)"
               className="search-input"
               value={searchTerm}
               onChange={(e) => {
@@ -337,7 +394,7 @@ export default function Home() {
                           <button
                             className="product-action-btn"
                             onClick={() => openAddModal(product)}
-                            onMouseEnter={refreshLists}
+                          // onMouseEnter={refreshLists}
                           >
                             Agregar
                           </button>
@@ -426,6 +483,19 @@ export default function Home() {
                     </select>
                   </div>
                   <div className="field">
+                    <label className="label">🏪 Supermercado</label>
+                    <select
+                      className="input"
+                      value={selectedSupermarketId}
+                      onChange={(e) => setSelectedSupermarketId(Number(e.target.value))}
+                    >
+                      <option value="" disabled>Seleccioná un supermercado</option>
+                      {supermarkets.map(s => (
+                        <option key={s.id} value={s.id}>{s.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
                     <label className="label">Cantidad</label>
                     <input
                       type="number"
@@ -463,6 +533,47 @@ export default function Home() {
         </div>
       )}
 
+      {/* PrimeReact Dialog para Alertas / Notificaciones */}
+      <Dialog
+        visible={alertModal.visible}
+        onHide={hideAlert}
+        draggable={false}
+        resizable={false}
+        dismissableMask
+        maskClassName="modern-dialog-mask"
+        className="modern-alert-dialog"
+        header={
+          <div className="alert-modal-header">
+            <div className={`alert-modal-icon-badge ${alertModal.severity}`}>
+              <i
+                className={
+                  alertModal.severity === 'warning'
+                    ? 'pi pi-exclamation-triangle'
+                    : alertModal.severity === 'info'
+                      ? 'pi pi-info-circle'
+                      : 'pi pi-times-circle'
+                }
+              />
+            </div>
+            <span className="alert-modal-title">{alertModal.title}</span>
+          </div>
+        }
+        footer={
+          <div className="alert-modal-footer">
+            <Button
+              label="Entendido"
+              onClick={hideAlert}
+              autoFocus
+              className="alert-modal-btn"
+            />
+          </div>
+        }
+      >
+        <div className="alert-modal-body">
+          <p className="alert-modal-message">{alertModal.message}</p>
+        </div>
+      </Dialog>
+
       <style>{`
         .home-header { text-align: center; padding: 2.5rem 1rem; background: var(--white); margin-bottom: 2rem; border-bottom: 1px solid var(--accent-color); }
         .home-title { font-size: 2.2rem; color: var(--brand-blue); margin-bottom: 0.5rem; font-weight: 800; }
@@ -492,7 +603,7 @@ export default function Home() {
         .product-card:hover { transform: translateY(-6px); box-shadow: 0 10px 28px rgba(0,0,0,0.09); }
 
         .product-image-container { position: relative; width: 100%; height: 220px; background-color: var(--secondary-color); display: flex; align-items: center; justify-content: center; }
-        .product-image { width: 100%; height: 100%; object-fit: cover; padding: 0.75rem; background: var(--white); }
+        .product-image { width: 100%; height: 100%; object-fit: contain; padding: 0.75rem; background: var(--white); }
 
         .product-super-badge {
           position: absolute; top: 12px; right: 12px;
@@ -501,7 +612,7 @@ export default function Home() {
           font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
         }
 
-        .product-info { padding: 1.25rem 1.25rem 1.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .product-info { padding: 1rem 1rem 1rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem; }
         .product-header { display: flex; justify-content: space-between; align-items: center; }
         .product-category { color: var(--brand-blue); font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; }
         .product-name { font-size: 1rem; margin: 0; color: var(--text-dark); font-weight: 700; line-height: 1.35; min-height: 2.8rem; }
@@ -579,6 +690,160 @@ export default function Home() {
         .modal-actions { display: flex; gap: 0.75rem; }
         .btn-secondary { background-color: #e5e7eb; color: #374151; }
         .btn-secondary:hover { filter: brightness(0.95); }
+
+        /* PrimeReact Alert Dialog Modern Styles */
+        .modern-dialog-mask {
+          background-color: rgba(15, 23, 42, 0.45) !important;
+          backdrop-filter: blur(5px) !important;
+          -webkit-backdrop-filter: blur(5px) !important;
+        }
+
+        .modern-alert-dialog.p-dialog {
+          width: 90vw;
+          max-width: 440px;
+          background: #ffffff;
+          border-radius: 20px;
+          box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.05);
+          border: none;
+          overflow: hidden;
+        }
+
+        [data-theme='dark'] .modern-alert-dialog.p-dialog {
+          background: #1e293b;
+          box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .modern-alert-dialog .p-dialog-header {
+          padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+          background: transparent;
+          border: none;
+          display: flex;
+          align-items: center;
+        }
+
+        .modern-alert-dialog .p-dialog-header-icons {
+          margin-left: auto;
+        }
+
+        .modern-alert-dialog .p-dialog-header-close {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .modern-alert-dialog .p-dialog-header-close:hover {
+          background: rgba(0, 0, 0, 0.05);
+          color: var(--text-dark);
+        }
+
+        .alert-modal-header {
+          display: flex;
+          align-items: center;
+          gap: 0.85rem;
+        }
+
+        .alert-modal-icon-badge {
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          flex-shrink: 0;
+        }
+
+        .alert-modal-icon-badge.warning {
+          background: #fffbeb;
+          color: #d97706;
+          border: 1px solid #fde68a;
+        }
+
+        .alert-modal-icon-badge.info {
+          background: #eff6ff;
+          color: #2563eb;
+          border: 1px solid #bfdbfe;
+        }
+
+        .alert-modal-icon-badge.error {
+          background: #fef2f2;
+          color: #dc2626;
+          border: 1px solid #fecaca;
+        }
+
+        .alert-modal-title {
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: var(--text-dark);
+          letter-spacing: -0.01em;
+        }
+
+        .modern-alert-dialog .p-dialog-content {
+          padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+          background: transparent;
+        }
+
+        .alert-modal-body {
+          padding-left: calc(42px + 0.85rem);
+        }
+
+        @media (max-width: 480px) {
+          .alert-modal-body {
+            padding-left: 0;
+          }
+        }
+
+        .alert-modal-message {
+          font-size: 0.95rem;
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin: 0;
+        }
+
+        .modern-alert-dialog .p-dialog-footer {
+          padding: 1rem 1.5rem;
+          background: #f8fafc;
+          border-top: 1px solid rgba(226, 232, 240, 0.8);
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        [data-theme='dark'] .modern-alert-dialog .p-dialog-footer {
+          background: rgba(15, 23, 42, 0.4);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .alert-modal-btn.p-button {
+          background: var(--brand-blue);
+          border: 1px solid var(--brand-blue);
+          color: #ffffff;
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 0.6rem 1.4rem;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(140, 164, 184, 0.35);
+          outline: none;
+        }
+
+        .alert-modal-btn.p-button:hover {
+          filter: brightness(0.92);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(140, 164, 184, 0.45);
+        }
+
+        .alert-modal-btn.p-button:active {
+          transform: translateY(0);
+        }
 
         @media (max-width: 600px) {
           .home-title { font-size: 1.8rem; }

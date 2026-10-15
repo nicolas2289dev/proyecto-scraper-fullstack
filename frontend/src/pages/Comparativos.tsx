@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { productoApi } from '../api/productoApi'
 import { listaApi } from '../api/listaApi'
-import type { ListaCompra } from '../types/Supermercado'
+import { supermercadoApi } from '../api/supermercadoApi'
+import type { ListaCompra, Supermercado } from '../types/Supermercado'
 
 interface ProductoComparativo {
   producto: string
@@ -13,6 +14,7 @@ interface ProductoComparativo {
 
 export default function Comparativos() {
   const [productos, setProductos] = useState<ProductoComparativo[]>([])
+  const [supermarkets, setSupermarkets] = useState<Supermercado[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filtroMarca, setFiltroMarca] = useState('')
@@ -30,6 +32,7 @@ export default function Comparativos() {
   useEffect(() => {
     fetchProductosComparativos()
     fetchListas()
+    supermercadoApi.getAll().then(setSupermarkets).catch(console.error)
   }, [])
 
   const fetchProductosComparativos = async () => {
@@ -93,7 +96,10 @@ export default function Comparativos() {
       // Usar el nombre del producto como búsqueda
       const prods = await productoApi.buscar(selectedProduct.producto)
       if (prods.length > 0) {
-        await listaApi.addItem(selectedListId, prods[0].id, quantity)
+        const matchedSuper = supermarkets.find(
+          (s) => s.nombre.toLowerCase().trim() === selectedProduct.supermercado.toLowerCase().trim()
+        )
+        await listaApi.addItem(Number(selectedListId), prods[0].id, quantity, matchedSuper?.id)
         setSuccessMsg(`"${selectedProduct.producto}" agregado correctamente.`)
         setTimeout(() => {
           setShowModal(false)

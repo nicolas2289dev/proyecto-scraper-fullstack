@@ -41,6 +41,7 @@ export interface ItemLista {
   cantidad: number
   precioUnitario: number
   precioTotal: number
+  supermercadoId?: number
   supermercadoNombre: string
 }
 
