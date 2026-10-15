@@ -31,20 +31,20 @@ public class OptimizacionServiceImpl implements OptimizacionService {
     @Override
     @Transactional(readOnly = true)
     public OptimizacionCompraDto generarCircuitoOptimo(Long listaId, String userEmail) {
-        // 1. Validar propiedad de la lista y obtener sus detalles
-        ListaCompraDto listaCompra = listaCompraService.obtenerLista(listaId, userEmail);
-        List<ItemListaDto> itemsLista = itemListaService.listarItems(listaId, userEmail);
+        // 1. Validar propiedad de la lista y obtener sus detalles con precios seleccionados
+        ListaCompraDetalleDto listaCompra = listaCompraService.obtenerListaDetalle(listaId, userEmail);
+        List<ItemListaConPrecioDto> itemsLista = listaCompra.getItems();
 
-        if (itemsLista.isEmpty()) {
+        if (itemsLista == null || itemsLista.isEmpty()) {
             throw new RuntimeException("La lista de compras está vacía. No se puede optimizar.");
         }
 
         Map<Long, List<PrecioPorTienda>> preciosPorProductoMaestro = new HashMap<>();
         List<ProductoOptimoDto> productosSinPrecio = new ArrayList<>();
-        BigDecimal totalMasCaro = BigDecimal.ZERO;
+        BigDecimal totalBase = BigDecimal.ZERO;
 
         // 2. Recopilar todos los precios disponibles para cada producto maestro
-        for (ItemListaDto item : itemsLista) {
+        for (ItemListaConPrecioDto item : itemsLista) {
             Producto productoMaestro = productoRepository.findById(item.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto maestro no encontrado: " + item.getProductoId()));
 
@@ -75,12 +75,17 @@ public class OptimizacionServiceImpl implements OptimizacionService {
                 ));
             } else {
                 preciosPorProductoMaestro.put(item.getProductoId(), preciosDisponibles);
-                // Para calcular el totalMasCaro, necesitamos el precio más alto de este producto
-                // multiplicado por la cantidad del item.
-                BigDecimal precioMasAltoParaProducto = preciosParaProducto.stream()
-                        .max(BigDecimal::compareTo)
-                        .orElse(BigDecimal.ZERO);
-                totalMasCaro = totalMasCaro.add(precioMasAltoParaProducto.multiply(BigDecimal.valueOf(item.getCantidad())));
+
+                // Determinar el precio base para este ítem:
+                // Si el ítem tiene precio del supermercado seleccionado en la lista, usarlo.
+                // En caso contrario, usar el precio más alto disponible como fallback.
+                BigDecimal precioBaseUnitario = item.getPrecioUnitario();
+                if (precioBaseUnitario == null) {
+                    precioBaseUnitario = preciosParaProducto.stream()
+                            .max(BigDecimal::compareTo)
+                            .orElse(BigDecimal.ZERO);
+                }
+                totalBase = totalBase.add(precioBaseUnitario.multiply(BigDecimal.valueOf(item.getCantidad())));
             }
         }
 
@@ -88,7 +93,7 @@ public class OptimizacionServiceImpl implements OptimizacionService {
         Map<Long, TiendaOptimaDto> hojaDeRutaMap = new HashMap<>(); // Key: Supermercado ID
         BigDecimal totalOptimo = BigDecimal.ZERO;
 
-        for (ItemListaDto item : itemsLista) {
+        for (ItemListaConPrecioDto item : itemsLista) {
             if (preciosPorProductoMaestro.containsKey(item.getProductoId())) {
                 List<PrecioPorTienda> precios = preciosPorProductoMaestro.get(item.getProductoId());
 
@@ -122,17 +127,17 @@ public class OptimizacionServiceImpl implements OptimizacionService {
                         return new TiendaOptimaDto(finalMejorPrecio.getSupermercadoId(), finalMejorPrecio.getSupermercadoNombre(), new ArrayList<>(), BigDecimal.ZERO);
                     });
 
-                    BigDecimal subtotalProducto = finalMejorPrecio.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad()));
+                    BigDecimal subtotalProducto = finalMejorPrecio.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())).setScale(2, RoundingMode.HALF_UP);
                     tiendaOptima.getProductos().add(new ProductoOptimoDto(
                             item.getProductoId(),
                             item.getProductoNombre(),
                             item.getMarca(),
                             item.getCantidad(),
-                            finalMejorPrecio.getPrecio(),
+                            finalMejorPrecio.getPrecio().setScale(2, RoundingMode.HALF_UP),
                             subtotalProducto,
                             null
                     ));
-                    tiendaOptima.setSubtotalTienda(tiendaOptima.getSubtotalTienda().add(subtotalProducto));
+                    tiendaOptima.setSubtotalTienda(tiendaOptima.getSubtotalTienda().add(subtotalProducto).setScale(2, RoundingMode.HALF_UP));
                     totalOptimo = totalOptimo.add(subtotalProducto);
 
                 } else {
@@ -150,14 +155,14 @@ public class OptimizacionServiceImpl implements OptimizacionService {
             }
         }
 
-        // 4. Calcular ahorro total
-        BigDecimal totalAhorrado = totalMasCaro.subtract(totalOptimo).setScale(2, RoundingMode.HALF_UP);
+        // 4. Calcular ahorro total respecto al precio de la lista seleccionada
+        BigDecimal totalAhorrado = totalBase.subtract(totalOptimo).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
 
         return new OptimizacionCompraDto(
                 listaId,
                 listaCompra.getNombreLista(),
                 totalOptimo.setScale(2, RoundingMode.HALF_UP),
-                totalMasCaro.setScale(2, RoundingMode.HALF_UP),
+                totalBase.setScale(2, RoundingMode.HALF_UP),
                 totalAhorrado,
                 new ArrayList<>(hojaDeRutaMap.values()),
                 productosSinPrecio
