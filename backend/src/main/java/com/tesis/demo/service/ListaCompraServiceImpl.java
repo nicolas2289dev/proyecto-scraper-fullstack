@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,13 +67,17 @@ public class ListaCompraServiceImpl implements ListaCompraService {
                     itemConPrecio.setProductoNombre(itemDto.getProductoNombre());
                     itemConPrecio.setMarca(itemDto.getMarca());
                     itemConPrecio.setCantidad(itemDto.getCantidad());
+                    itemConPrecio.setSupermercadoId(itemDto.getSupermercadoId());
+                    itemConPrecio.setSupermercadoNombre(itemDto.getSupermercadoNombre());
 
-                    // Obtener el último precio del producto en cualquier supermercado
-                    historialPrecioService.obtenerUltimoPorProductoMaestro(itemDto.getProductoId())
+                    // Obtener el precio del producto para el supermercado asociado al ítem
+                    historialPrecioService.obtenerUltimoPorProductoYSupermercado(itemDto.getProductoId(), itemDto.getSupermercadoId())
                             .ifPresent(hpDto -> {
                                 itemConPrecio.setPrecioUnitario(hpDto.getPrecio());
-                                itemConPrecio.setSupermercadoId(hpDto.getSupermercadoId());
-                                itemConPrecio.setSupermercadoNombre(hpDto.getSupermercadoNombre());
+                                if (itemConPrecio.getSupermercadoId() == null) {
+                                    itemConPrecio.setSupermercadoId(hpDto.getSupermercadoId());
+                                    itemConPrecio.setSupermercadoNombre(hpDto.getSupermercadoNombre());
+                                }
                                 itemConPrecio.setPrecioTotal(hpDto.getPrecio().multiply(BigDecimal.valueOf(itemDto.getCantidad())));
                             });
                     return itemConPrecio;
@@ -80,6 +85,7 @@ public class ListaCompraServiceImpl implements ListaCompraService {
 
         BigDecimal totalEstimado = itemsConPrecio.stream()
                 .map(ItemListaConPrecioDto::getPrecioTotal)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new ListaCompraDetalleDto(

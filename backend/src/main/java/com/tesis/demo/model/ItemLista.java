@@ -23,6 +23,10 @@ public class ItemLista {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supermercado_id")
+    private Supermercado supermercado;
+
     @Column(nullable = false)
     private Integer cantidad;
 }

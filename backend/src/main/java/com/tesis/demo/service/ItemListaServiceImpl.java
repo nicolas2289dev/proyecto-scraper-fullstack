@@ -7,9 +7,11 @@ import com.tesis.demo.exception.ResourceNotFoundException;
 import com.tesis.demo.model.ItemLista;
 import com.tesis.demo.model.ListaCompra;
 import com.tesis.demo.model.Producto;
+import com.tesis.demo.model.Supermercado;
 import com.tesis.demo.repository.ItemListaRepository;
 import com.tesis.demo.repository.ListaCompraRepository;
 import com.tesis.demo.repository.ProductoRepository;
+import com.tesis.demo.repository.SupermercadoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ public class ItemListaServiceImpl implements ItemListaService {
     private final ItemListaRepository itemListaRepository;
     private final ListaCompraRepository listaCompraRepository;
     private final ProductoRepository productoRepository;
+    private final SupermercadoRepository supermercadoRepository;
 
     @Override
     @Transactional
@@ -41,6 +44,12 @@ public class ItemListaServiceImpl implements ItemListaService {
         ItemLista itemLista = new ItemLista();
         itemLista.setListaCompra(lista);
         itemLista.setProducto(producto);
+        // Supermercado seleccionado asociado si fue elegido
+        if (dto.getSupermercadoId() != null) {
+            Supermercado supermercado = supermercadoRepository.findById(dto.getSupermercadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Supermercado no encontrado"));
+            itemLista.setSupermercado(supermercado);
+        }
         itemLista.setCantidad(dto.getCantidad());
 
         return mapToDto(itemListaRepository.save(itemLista));
@@ -84,6 +93,11 @@ public class ItemListaServiceImpl implements ItemListaService {
 
         itemLista.setProducto(producto);
         itemLista.setCantidad(dto.getCantidad());
+        if (dto.getSupermercadoId() != null) {
+            Supermercado supermercado = supermercadoRepository.findById(dto.getSupermercadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Supermercado no encontrado"));
+            itemLista.setSupermercado(supermercado);
+        }
 
         return mapToDto(itemListaRepository.save(itemLista));
     }
@@ -117,7 +131,9 @@ public class ItemListaServiceImpl implements ItemListaService {
                 itemLista.getProducto().getId(),
                 itemLista.getProducto().getNombreGenerico(),
                 itemLista.getProducto().getMarca(),
-                itemLista.getCantidad()
+                itemLista.getCantidad(),
+                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getId() : null,
+                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getNombre() : null
         );
     }
 }

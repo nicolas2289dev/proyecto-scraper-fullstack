@@ -88,6 +88,21 @@ public class HistorialPrecioServiceImpl implements HistorialPrecioService {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<HistorialPrecioDto> obtenerUltimoPorProductoYSupermercado(Long productoId, Long supermercadoId) {
+        if (supermercadoId != null) {
+            Optional<HistorialPrecioDto> precioSuper = productoTiendaRepository
+                    .findByProductoIdAndSupermercadoId(productoId, supermercadoId)
+                    .flatMap(pt -> historialPrecioRepository.findTopByProductoTiendaIdOrderByFechaRecoleccionDesc(pt.getId()))
+                    .map(this::mapToDto);
+            if (precioSuper.isPresent()) {
+                return precioSuper;
+            }
+        }
+        return obtenerUltimoPorProductoMaestro(productoId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<HistorialPrecioDto> listarHistoricoPorProductoMaestro(Long productoId) {
         List<ProductoTienda> productosTienda = productoTiendaRepository.findByProductoId(productoId);
         

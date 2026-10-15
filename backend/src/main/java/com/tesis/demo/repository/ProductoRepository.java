@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
@@ -35,10 +36,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     List<Producto> findAllByNombreGenericoIgnoreCase(@Param("nombreGenerico") String nombreGenerico);
 
     /** Busca el producto maestro por código de barras (EAN/GTIN). */
-    java.util.Optional<Producto> findByEan(String ean);
+    Optional<Producto> findByEan(String ean);
 
     /** Busca el producto maestro por su huella determinista dentro de una categoría. */
-    java.util.Optional<Producto> findByCategoriaIdAndClaveNormalizada(Long categoriaId, String claveNormalizada);
+    Optional<Producto> findByCategoriaIdAndClaveNormalizada(Long categoriaId, String claveNormalizada);
 
     /**
      * Verifica si ya existe un producto con los mismos atributos atómicos y categoría.
