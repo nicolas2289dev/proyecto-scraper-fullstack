@@ -3,6 +3,7 @@ package com.tesis.demo.service;
 import com.tesis.demo.dto.ProductoBusquedaDto;
 import com.tesis.demo.dto.ProductoComparativoDto;
 import com.tesis.demo.dto.ProductoDto;
+import com.tesis.demo.dto.ProductoTiendaOfertaDto;
 import com.tesis.demo.model.Categoria;
 import com.tesis.demo.model.Producto;
 import com.tesis.demo.model.ProductoTienda;
@@ -13,11 +14,17 @@ import com.tesis.demo.repository.ProductoRepository;
 import com.tesis.demo.repository.ProductoTiendaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -74,7 +81,61 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductoBusquedaDto> buscarConPrecios(String query, String marca, Long supermercadoId, Pageable pageable) {
-        return historialPrecioRepository.buscarProductosConPrecios(query, marca, supermercadoId, pageable);
+        Pageable cleanPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
+        Sort.Order precioOrder = pageable.getSort() != null ? pageable.getSort().getOrderFor("precio") : null;
+        Page<Producto> productosPage;
+        if (precioOrder != null && precioOrder.isAscending()) {
+            productosPage = productoRepository.buscarProductosMaestrosPrecioAsc(query, marca, supermercadoId, cleanPageable);
+        } else if (precioOrder != null && precioOrder.isDescending()) {
+            productosPage = productoRepository.buscarProductosMaestrosPrecioDesc(query, marca, supermercadoId, cleanPageable);
+        } else {
+            productosPage = productoRepository.buscarProductosMaestrosPorDefecto(query, marca, supermercadoId, cleanPageable);
+        }
+
+        if (productosPage.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+
+        List<Long> productoIds = productosPage.getContent().stream()
+                .map(Producto::getId)
+                .toList();
+
+        Map<Long, List<ProductoTiendaOfertaDto>> ofertasPorProducto = historialPrecioRepository
+                .obtenerOfertasPorProductoIds(productoIds)
+                .stream()
+                .collect(Collectors.groupingBy(ProductoTiendaOfertaDto::getProductoId));
+
+        List<ProductoBusquedaDto> dtos = productosPage.getContent().stream().map(p -> {
+            List<ProductoTiendaOfertaDto> ofertas = ofertasPorProducto.getOrDefault(p.getId(), Collections.emptyList());
+
+            String imagenPrincipal = ofertas.stream()
+                    .map(ProductoTiendaOfertaDto::getUrlImagen)
+                    .filter(img -> img != null && !img.isBlank())
+                    .findFirst()
+                    .orElse(null);
+
+            BigDecimal precioReferencia = ofertas.isEmpty() ? BigDecimal.ZERO : ofertas.get(0).getPrecio();
+            String supermercadoReferencia = ofertas.isEmpty() ? "" : ofertas.get(0).getSupermercadoNombre();
+            String urlReferencia = ofertas.isEmpty() ? null : ofertas.get(0).getUrlEspecifica();
+
+            return new ProductoBusquedaDto(
+                    p.getId(),
+                    p.getMarca(),
+                    p.getNombreGenerico(),
+                    p.getCategoria() != null ? p.getCategoria().getNombre() : null,
+                    p.getPesoUnidad(),
+                    p.getPesoValor(),
+                    p.getVarianteEspecifica(),
+                    urlReferencia,
+                    supermercadoReferencia,
+                    imagenPrincipal,
+                    precioReferencia,
+                    ofertas
+            );
+        }).toList();
+
+        return new PageImpl<>(dtos, pageable, productosPage.getTotalElements());
     }
 
     @Override

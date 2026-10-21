@@ -1,6 +1,7 @@
 package com.tesis.demo.repository;
 
 import com.tesis.demo.dto.ProductoBusquedaDto;
+import com.tesis.demo.dto.ProductoTiendaOfertaDto;
 import com.tesis.demo.model.HistorialPrecio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -86,4 +87,18 @@ public interface HistorialPrecioRepository extends JpaRepository<HistorialPrecio
            "AND (:supermercadoId IS NULL OR s.id = :supermercadoId) " +
            "ORDER BY p.marca ASC")
     List<String> obtenerMarcasDisponibles(@Param("query") String query, @Param("supermercadoId") Long supermercadoId);
+
+    @Query("SELECT new com.tesis.demo.dto.ProductoTiendaOfertaDto(" +
+           "pt.producto.id, s.id, s.nombre, hp.precio, pt.urlImagen, pt.urlEspecifica) " +
+           "FROM HistorialPrecio hp " +
+           "JOIN hp.productoTienda pt " +
+           "JOIN pt.supermercado s " +
+           "WHERE pt.producto.id IN :productoIds " +
+           "AND hp.fechaRecoleccion = (" +
+           "    SELECT MAX(hp2.fechaRecoleccion) " +
+           "    FROM HistorialPrecio hp2 " +
+           "    WHERE hp2.productoTienda.id = pt.id" +
+           ") " +
+           "ORDER BY hp.precio ASC")
+    List<ProductoTiendaOfertaDto> obtenerOfertasPorProductoIds(@Param("productoIds") List<Long> productoIds);
 }
