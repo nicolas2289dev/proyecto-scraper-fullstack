@@ -24,6 +24,10 @@ La configuración centralizada se encuentra en `src/api/axios.ts`.
 #### Usuarios (`/usuarios`)
 - `POST /usuarios`: Envía datos de registro para crear una cuenta.
 
+#### Productos (`/productos`)
+- `GET /productos/busqueda`: Busca productos paginados con su último precio. Filtros: `q`, `supermercadoId`, `marca`, `sort`.
+- `GET /productos/busqueda/marcas`: Obtiene una lista de marcas disponibles para los filtros actuales (`q`, `supermercadoId`).
+
 #### Mis Listas (`/listas`)
 - `GET /listas`: Obtiene las listas del usuario logueado.
 - `POST /listas`: Crea una nueva lista con nombre y estado favorita.

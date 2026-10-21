@@ -1,5 +1,28 @@
 # Changelog Frontend
 
+## [v2.4] - Filtro Dinámico por Marca en Búsqueda
+- **Componentes:**
+  - Se añadió un nuevo filtro desplegable de "Marca" en `Home.tsx`.
+  - El filtro se habilita dinámicamente y se rellena solo con las marcas disponibles de los resultados actuales de la búsqueda.
+- **API:**
+  - Actualización de `productoApi.ts` para enviar el parámetro `marca` en `buscarPaginado`.
+  - Se añadió `obtenerMarcas` para consultar `GET /productos/busqueda/marcas`.
+- **Correcciones (Hotfixes):**
+  - Se optimizaron los hooks `useEffect` en `Home.tsx` eliminando llamadas redundantes a `fetchProducts` durante el montaje inicial, lo que reducía el rendimiento y generaba peticiones duplicadas a la API.
+
+## [v2.3] - Paginación, Ordenamiento y Endpoints de Búsqueda
+- **Home (Paginación y UI):**
+  - Se actualizó `Home.tsx` para consumir el nuevo endpoint `/busqueda` paginado, abandonando la antigua ruta `/comparativo/todos`.
+  - Se añadieron controles de paginación reales (botones Anterior/Siguiente) basados en `totalPages` y `page` enviados por el backend.
+  - Se añadió la información de la cantidad total de resultados (`totalElements`).
+- **Ordenamiento (Server-Side):**
+  - Se delegó el ordenamiento por precio al backend, enviando dinámicamente el parámetro `sort` (`precio,asc` o `precio,desc`) desde React hacia el servidor.
+- **API (productoApi.ts):**
+  - Se actualizó el endpoint base de búsqueda de productos hacia `/productos/busqueda`.
+  - Se implementó la nueva función `buscarPaginado` en `productoApi.ts` que devuelve la interfaz `PaginaProductos` en lugar de una lista plana, soportando parámetros de paginación y ordenamiento.
+- **Tipos:**
+  - Se agregaron las interfaces `PaginaProductos` y actualizadas las estructuras en `types/Supermercado.ts` para manejar la respuesta paginada del servidor.
+
 ## Estructura Inicial
 - Configuración del proyecto con Vite, React y TypeScript.
 - Integración de Tailwind CSS para el diseño.
@@ -39,9 +62,9 @@
 - **Flujo de carga**:
   1. Carga inicial paralela (`Promise.all`): `supermercadoApi.getAll()` + `listaApi.getAll()` para supermercados y listas.
   2. `fetchProducts()` dispara `productoApi.buscar(nombre?, supermercadoId?)` con los filtros del usuario.
-- **Búsqueda SERVER-SIDE con debounce 400ms**: Al escribir en el input, el término se envía como query param `nombre` al backend (no se filtra en cliente). Evita requests spam mientras tipeás.
-- **Filtro por supermercado SERVER-SIDE**: Ahora el select usa el `id` real del supermercado y envía `supermercadoId` al endpoint (antes comparaba strings de nombre). Opción "Todos" = sin filtro.
-- **Ordenamiento por precio CLIENTE**: selector Por defecto / Menor a Mayor / Mayor a Menor aplicado sobre los resultados ya filtrados del backend.
+- **Búsqueda SERVER-SIDE con debounce 400ms**: Al escribir en el input, el término se envía como query param al backend.
+- **Filtro por supermercado SERVER-SIDE**: Ahora el select usa el `id` real del supermercado.
+- **Ordenamiento por precio SERVER-SIDE**: Selector Por defecto / Menor a Mayor / Mayor a Menor aplicado desde la paginación de base de datos.
 - **Skeleton de carga animado**: 6 tarjetas shimmer mientras carga el Home inicial (reemplaza el texto "Cargando productos...").
 - **Estado "Buscando..."** en el contador de resultados para búsqueda/filtros asíncronos (para distinguir del loading inicial).
 - **Banner de error + botón Reintentar** cuando falla la conexión al backend.
