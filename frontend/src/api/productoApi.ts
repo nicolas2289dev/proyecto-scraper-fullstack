@@ -19,6 +19,16 @@ const normalizeProducto = (raw: any): ProductoBusqueda => ({
   pesoUnidad: raw?.pesoUnidad ?? undefined,
   varianteEspecifica: raw?.varianteEspecifica ?? undefined,
   urlEspecifica: raw?.urlEspecifica ?? undefined,
+  tiendas: Array.isArray(raw?.tiendas)
+    ? raw.tiendas.map((t: any) => ({
+        productoId: Number(t?.productoId ?? raw?.id ?? 0),
+        supermercadoId: Number(t?.supermercadoId ?? 0),
+        supermercadoNombre: t?.supermercadoNombre ?? 'Supermercado',
+        precio: Number(t?.precio ?? 0),
+        urlImagen: buildImageUrl(t?.urlImagen),
+        urlEspecifica: t?.urlEspecifica ?? undefined,
+      }))
+    : [],
 })
 
 export interface PaginaProductos {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from 'primereact/dialog'
 import { Button } from 'primereact/button'
+import { SelectButton } from 'primereact/selectbutton'
 import type { Supermercado, ProductoBusqueda, ListaCompra } from '../types/Supermercado'
 import { productoApi } from '../api/productoApi'
 import { supermercadoApi } from '../api/supermercadoApi'
@@ -25,12 +26,30 @@ export default function Home() {
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Modo de vista: 'compacta' (unificada) o 'clasica' (todas las ofertas individuales)
+  const [viewMode, setViewMode] = useState<'clasica' | 'compacta'>(() => {
+    return (localStorage.getItem('preferredViewMode') as 'clasica' | 'compacta') || 'compacta'
+  })
+
+  const viewOptions = [
+    { label: 'Vista Clásica', value: 'clasica', icon: 'pi pi-th-large' },
+    { label: 'Vista Compacta', value: 'compacta', icon: 'pi pi-clone' }
+  ]
+
+  const handleViewModeChange = (val: 'clasica' | 'compacta' | null) => {
+    if (val) {
+      setViewMode(val)
+      localStorage.setItem('preferredViewMode', val)
+    }
+  }
+
   // Paginación (server-side, /productos/busqueda)
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
 
   const [showModal, setShowModal] = useState(false)
+  const [modalMode, setModalMode] = useState<'clasica' | 'compacta'>('compacta')
   const [selectedProduct, setSelectedProduct] = useState<ProductoBusqueda | null>(null)
   const [selectedListId, setSelectedListId] = useState<number | string>('')
   const [selectedSupermarketId, setSelectedSupermarketId] = useState<number | string>('')
@@ -163,7 +182,7 @@ export default function Home() {
       .join(' ')
 
 
-  const openAddModal = (product: ProductoBusqueda) => {
+  const openAddModal = (product: ProductoBusqueda, preselectedSuperId?: number) => {
     if (!isAuthenticated) {
       navigate('/login')
       return
@@ -173,18 +192,29 @@ export default function Home() {
     setSelectedListId(listOptions.length ? listOptions[0].id : '')
     setQuantity(1)
 
-    // Preseleccionar el supermercado del producto o del filtro activo
-    const matched = supermarkets.find(
-      (s) => s.nombre.trim().toLowerCase() === product.nombreSupermercado?.trim().toLowerCase()
-    )
-    if (matched) {
-      setSelectedSupermarketId(matched.id)
+    const isClassic = viewMode === 'clasica' || preselectedSuperId !== undefined
+    setModalMode(isClassic ? 'clasica' : 'compacta')
+
+    // Preseleccionar el supermercado de acuerdo al parametro explicito, al filtro activo o el primero disponible
+    const tiendas = product.tiendas && product.tiendas.length > 0 ? product.tiendas : []
+    if (preselectedSuperId !== undefined && preselectedSuperId > 0) {
+      setSelectedSupermarketId(preselectedSuperId)
     } else if (filterSupermarket !== 'all') {
-      setSelectedSupermarketId(Number(filterSupermarket))
-    } else if (supermarkets.length > 0) {
-      setSelectedSupermarketId(supermarkets[0].id)
+      const matchFilter = tiendas.find(t => t.supermercadoId === Number(filterSupermarket))
+      if (matchFilter) {
+        setSelectedSupermarketId(matchFilter.supermercadoId)
+      } else if (tiendas.length > 0) {
+        setSelectedSupermarketId(tiendas[0].supermercadoId)
+      } else {
+        setSelectedSupermarketId(Number(filterSupermarket))
+      }
+    } else if (tiendas.length > 0) {
+      setSelectedSupermarketId(tiendas[0].supermercadoId)
     } else {
-      setSelectedSupermarketId('')
+      const matched = supermarkets.find(
+        (s) => s.nombre.trim().toLowerCase() === product.nombreSupermercado?.trim().toLowerCase()
+      )
+      setSelectedSupermarketId(matched ? matched.id : '')
     }
 
     setShowModal(true)
@@ -194,15 +224,7 @@ export default function Home() {
   const handleAddToList = async () => {
     if (!selectedProduct || selectedListId === '') return
 
-    // Obtener el ID del supermercado: primero del modal, o por coincidencia con el producto, o del filtro
-    const matchedSuper = supermarkets.find(
-      (s) => s.nombre.trim().toLowerCase() === selectedProduct.nombreSupermercado?.trim().toLowerCase()
-    )
-    const finalSupermercadoId = selectedSupermarketId !== ''
-      ? Number(selectedSupermarketId)
-      : (matchedSuper?.id ?? (filterSupermarket !== 'all' ? Number(filterSupermarket) : undefined))
-
-    if (!finalSupermercadoId) {
+    if (!selectedSupermarketId || selectedSupermarketId === '') {
       showAlert('Seleccionar supermercado', 'Debe seleccionar un supermercado antes de agregar el producto.', 'warning')
       return
     }
@@ -211,7 +233,7 @@ export default function Home() {
     try {
       let productId = selectedProduct.id
       const listaId = Number(selectedListId)
-      const supermercadoId = finalSupermercadoId
+      const supermercadoId = Number(selectedSupermarketId)
 
       // Si el ID es inválido (producto comparativo), buscar por nombre
       if (productId <= 0) {
@@ -254,6 +276,10 @@ export default function Home() {
       console.error(err)
     }
   }
+
+  const totalCardsCount = viewMode === 'compacta'
+    ? products.length
+    : products.reduce((acc, p) => acc + (p.tiendas && p.tiendas.length > 0 ? p.tiendas.length : 1), 0)
 
   return (
     <>
@@ -354,54 +380,144 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              <div className="results-summary">
-                {searching ? (
-                  <span style={{ color: 'var(--primary-color)', fontWeight: 600 }}>🔄 Buscando...</span>
-                ) : (
-                  <>Mostrando <strong>{products.length}</strong> de <strong>{totalElements}</strong> producto{totalElements !== 1 ? 's' : ''}</>
-                )}
+              <div className="results-summary-row">
+                <div className="results-summary">
+                  {searching ? (
+                    <span style={{ color: 'var(--primary-color)', fontWeight: 600 }}>🔄 Buscando...</span>
+                  ) : (
+                    <>
+                      Mostrando <strong>{totalCardsCount}</strong> {viewMode === 'compacta' ? 'producto' : 'oferta'}{totalCardsCount !== 1 ? 's' : ''}
+                      {viewMode === 'compacta' ? ` de ${totalElements} en catálogo` : ''}
+                    </>
+                  )}
+                </div>
+
+                <div className="view-mode-selector">
+                  <SelectButton
+                    value={viewMode}
+                    onChange={(e) => handleViewModeChange(e.value)}
+                    options={viewOptions}
+                    className="custom-view-selectbutton"
+                  />
+                </div>
               </div>
 
-              {/* Resultados paginados de /productos/busqueda (con o sin término de búsqueda) */}
+              {/* Resultados paginados de /productos/busqueda segun el modo de vista */}
               {products.length > 0 ? (
                 <div className="product-grid">
-                  {products.map((product) => (
-                    <div key={`${product.id}-${product.nombreSupermercado}`} className="product-card">
-                      <div className="product-image-container">
-                        <img
-                          src={product.urlImagen || 'https://via.placeholder.com/400?text=Producto'}
-                          alt={product.nombreGenerico}
-                          className="product-image"
-                          loading="lazy"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            if (!target.dataset.fallback) {
-                              target.dataset.fallback = '1'
-                              target.src = 'https://via.placeholder.com/400x400.png?text=Sin+imagen'
-                            }
-                          }}
-                        />
-                        <span className="product-super-badge">{product.nombreSupermercado}</span>
-                      </div>
-                      <div className="product-info">
-                        <div className="product-header">
-                          <span className="product-category">{product.marca || 'Sin marca'}</span>
-                        </div>
-                        <h3 className="product-name">{nombreCompleto(product)}</h3>
+                  {viewMode === 'compacta' ? (
+                    /* ── VISTA COMPACTA: 1 card unificada por producto maestro ── */
+                    products.map((product) => {
+                      const tiendas = product.tiendas && product.tiendas.length > 0
+                        ? product.tiendas
+                        : [{
+                          productoId: product.id,
+                          supermercadoId: 0,
+                          supermercadoNombre: product.nombreSupermercado,
+                          precio: product.precio,
+                          urlImagen: product.urlImagen,
+                        }]
+                      const cantTiendas = tiendas.length
 
-                        <div className="product-footer">
-                          <p className="product-price">${Number(product.precio || 0).toLocaleString('es-AR')}</p>
-                          <button
-                            className="product-action-btn"
-                            onClick={() => openAddModal(product)}
-                          // onMouseEnter={refreshLists}
-                          >
-                            Agregar
-                          </button>
+                      return (
+                        <div key={`compact-${product.id}`} className="product-card">
+                          <div className="product-image-container">
+                            <img
+                              src={product.urlImagen || 'https://via.placeholder.com/400?text=Producto'}
+                              alt={product.nombreGenerico}
+                              className="product-image"
+                              loading="lazy"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                if (!target.dataset.fallback) {
+                                  target.dataset.fallback = '1'
+                                  target.src = 'https://via.placeholder.com/400x400.png?text=Sin+imagen'
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="product-info">
+                            <div className="product-header">
+                              <span className="product-category">{product.marca || 'Sin marca'}</span>
+                            </div>
+                            <h3 className="product-name">{nombreCompleto(product)}</h3>
+
+                            <div className="product-stores-availability">
+                              <span className="product-stores-label">
+                                Disponible en {cantTiendas} {cantTiendas === 1 ? 'supermercado' : 'supermercados'}:
+                              </span>
+                              <div className="product-stores-badges">
+                                {tiendas.map((t, idx) => (
+                                  <span key={t.supermercadoId || idx} className="store-badge">
+                                    {t.supermercadoNombre}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="product-footer">
+                              <button
+                                className="product-action-btn product-action-btn-full"
+                                onClick={() => openAddModal(product)}
+                              >
+                                Agregar
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      )
+                    })
+                  ) : (
+                    /* ── VISTA CLÁSICA: 1 card por cada oferta/tienda individual ── */
+                    products.flatMap((product) => {
+                      const tiendas = product.tiendas && product.tiendas.length > 0
+                        ? product.tiendas
+                        : [{
+                          productoId: product.id,
+                          supermercadoId: supermarkets.find(s => s.nombre.trim().toLowerCase() === product.nombreSupermercado?.trim().toLowerCase())?.id || 0,
+                          supermercadoNombre: product.nombreSupermercado,
+                          precio: product.precio,
+                          urlImagen: product.urlImagen,
+                        }]
+
+                      return tiendas.map((t, idx) => (
+                        <div key={`classic-${product.id}-${t.supermercadoId || idx}`} className="product-card">
+                          <div className="product-image-container">
+                            <img
+                              src={t.urlImagen || product.urlImagen || 'https://via.placeholder.com/400?text=Producto'}
+                              alt={product.nombreGenerico}
+                              className="product-image"
+                              loading="lazy"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                if (!target.dataset.fallback) {
+                                  target.dataset.fallback = '1'
+                                  target.src = 'https://via.placeholder.com/400x400.png?text=Sin+imagen'
+                                }
+                              }}
+                            />
+                            <span className="product-super-badge">{t.supermercadoNombre}</span>
+                          </div>
+                          <div className="product-info">
+                            <div className="product-header">
+                              <span className="product-category">{product.marca || 'Sin marca'}</span>
+                            </div>
+                            <h3 className="product-name">{nombreCompleto(product)}</h3>
+
+                            <div className="product-footer">
+                              <p className="product-price">${Number(t.precio || 0).toLocaleString('es-AR')}</p>
+                              <button
+                                className="product-action-btn"
+                                onClick={() => openAddModal(product, t.supermercadoId)}
+                              >
+                                Agregar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    })
+                  )}
                 </div>
               ) : (
                 <div className="no-results-container">
@@ -433,105 +549,157 @@ export default function Home() {
         </section>
       </main>
 
-      {showModal && selectedProduct && (
-        <div className="modal-overlay" onClick={() => !adding && setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title">Agregar a mi lista</h2>
-            <div className="modal-product-info">
-              <img
-                src={selectedProduct.urlImagen || 'https://via.placeholder.com/120?text=Producto'}
-                alt={selectedProduct.nombreGenerico}
-                className="modal-product-img"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  if (!target.dataset.fallback) {
-                    target.dataset.fallback = '1'
-                    target.src = 'https://via.placeholder.com/120x120.png?text=Producto'
-                  }
-                }}
-              />
-              <div>
-                <p className="modal-product-name">{selectedProduct.nombreGenerico}</p>
-                <p className="modal-product-brand">{selectedProduct.marca} · {selectedProduct.nombreSupermercado}</p>
-                <p className="modal-product-price">${Number(selectedProduct.precio || 0).toLocaleString('es-AR')}</p>
-              </div>
-            </div>
+      {showModal && selectedProduct && (() => {
+        const modalTiendas = selectedProduct.tiendas && selectedProduct.tiendas.length > 0
+          ? selectedProduct.tiendas
+          : [{
+            productoId: selectedProduct.id,
+            supermercadoId: typeof selectedSupermarketId === 'number' ? selectedSupermarketId : 1,
+            supermercadoNombre: selectedProduct.nombreSupermercado,
+            precio: selectedProduct.precio,
+            urlImagen: selectedProduct.urlImagen,
+          }]
 
-            <div className="modal-fields">
-              {listOptions.length === 0 ? (
-                <div className="empty-lists-warning">
-                  <p>⚠️ Todavía no tenés listas creadas.</p>
-                  <button className="btn btn-secondary" onClick={goCreateList}>
-                    Crear mi primera lista
-                  </button>
+        const currentTienda = modalTiendas.find(t => t.supermercadoId === selectedSupermarketId) || modalTiendas[0]
+
+        return (
+          <div className="modal-overlay" onClick={() => !adding && setShowModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">Agregar a mi lista</h2>
+
+              {modalMode === 'clasica' ? (
+                /* ── SECCIÓN VISTA CLÁSICA: Producto individual de la card seleccionada ── */
+                <div className="modal-product-info">
+                  <img
+                    src={currentTienda.urlImagen || selectedProduct.urlImagen || 'https://via.placeholder.com/120?text=Producto'}
+                    alt={selectedProduct.nombreGenerico}
+                    className="modal-product-img"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      if (!target.dataset.fallback) {
+                        target.dataset.fallback = '1'
+                        target.src = 'https://via.placeholder.com/120x120.png?text=Producto'
+                      }
+                    }}
+                  />
+                  <div className="modal-store-details">
+                    <p className="modal-product-name">{nombreCompleto(selectedProduct)}</p>
+                    <p className="modal-product-brand">
+                      {selectedProduct.marca} · <strong className="modal-super-name">{currentTienda.supermercadoNombre || selectedProduct.nombreSupermercado}</strong>
+                    </p>
+                    <p className="modal-product-price">${Number(currentTienda.precio ?? selectedProduct.precio ?? 0).toLocaleString('es-AR')}</p>
+                  </div>
                 </div>
               ) : (
-                <>
-                  <div className="field">
-                    <label className="label">Lista destino</label>
-                    <select
-                      className="input"
-                      value={selectedListId}
-                      onChange={(e) => setSelectedListId(e.target.value)}
-                    >
-                      <option value="">Seleccioná una lista</option>
-                      {listOptions.map(l => (
-                        <option key={l.id} value={String(l.id)}>
-                          {l.favorita ? '⭐ ' : ''}{l.nombreLista}
-                        </option>
-                      ))}
-                    </select>
+                /* ── SECCIÓN VISTA COMPACTA: Selección de supermercado disponible ── */
+                <div className="modal-stores-selection">
+                  <label className="label modal-selection-title">Seleccioná el supermercado:</label>
+                  <div className="modal-stores-list">
+                    {modalTiendas.map((t, idx) => {
+                      const isSelected = selectedSupermarketId === t.supermercadoId
+                      return (
+                        <div
+                          key={t.supermercadoId || idx}
+                          className={`modal-product-info modal-store-card ${isSelected ? 'selected' : ''}`}
+                          onClick={() => setSelectedSupermarketId(t.supermercadoId)}
+                        >
+                          <div className="store-radio-container">
+                            <input
+                              type="radio"
+                              name="selectedStore"
+                              checked={isSelected}
+                              onChange={() => setSelectedSupermarketId(t.supermercadoId)}
+                            />
+                          </div>
+                          <img
+                            src={t.urlImagen || selectedProduct.urlImagen || 'https://via.placeholder.com/120?text=Producto'}
+                            alt={selectedProduct.nombreGenerico}
+                            className="modal-product-img"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              if (!target.dataset.fallback) {
+                                target.dataset.fallback = '1'
+                                target.src = 'https://via.placeholder.com/120x120.png?text=Producto'
+                              }
+                            }}
+                          />
+                          <div className="modal-store-details">
+                            <p className="modal-product-name">{nombreCompleto(selectedProduct)}</p>
+                            <p className="modal-product-brand">
+                              {selectedProduct.marca} · <strong className="modal-super-name">{t.supermercadoNombre}</strong>
+                            </p>
+                            <p className="modal-product-price">${Number(t.precio || 0).toLocaleString('es-AR')}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div className="field">
-                    <label className="label">🏪 Supermercado</label>
-                    <select
-                      className="input"
-                      value={selectedSupermarketId}
-                      onChange={(e) => setSelectedSupermarketId(Number(e.target.value))}
-                    >
-                      <option value="" disabled>Seleccioná un supermercado</option>
-                      {supermarkets.map(s => (
-                        <option key={s.id} value={s.id}>{s.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label className="label">Cantidad</label>
-                    <input
-                      type="number"
-                      className="input"
-                      min={1}
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    />
-                  </div>
-                </>
+                </div>
               )}
-            </div>
 
-            {successMsg && <div className="modal-success">✅ {successMsg}</div>}
+              <div className="modal-fields">
+                {listOptions.length === 0 ? (
+                  <div className="empty-lists-warning">
+                    <p>⚠️ Todavía no tenés listas creadas.</p>
+                    <button className="btn btn-secondary" onClick={goCreateList}>
+                      Crear mi primera lista
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="field">
+                      <label className="label">Lista destino</label>
+                      <select
+                        className="input"
+                        value={selectedListId}
+                        onChange={(e) => setSelectedListId(e.target.value)}
+                      >
+                        <option value="">Seleccioná una lista</option>
+                        {listOptions.map(l => (
+                          <option key={l.id} value={String(l.id)}>
+                            {l.favorita ? '⭐ ' : ''}{l.nombreLista}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label className="label">Cantidad</label>
+                      <input
+                        type="number"
+                        className="input"
+                        min={1}
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
 
-            <div className="modal-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowModal(false)}
-                disabled={adding}
-              >
-                Cancelar
-              </button>
-              {listOptions.length > 0 && (
+              {successMsg && <div className="modal-success">✅ {successMsg}</div>}
+
+              <div className="modal-actions">
                 <button
-                  className="btn"
-                  onClick={handleAddToList}
-                  disabled={adding || selectedListId === ''}
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                  disabled={adding}
                 >
-                  {adding ? 'Agregando...' : 'Confirmar'}
+                  Cancelar
                 </button>
-              )}
+                {listOptions.length > 0 && (
+                  <button
+                    className="btn"
+                    onClick={handleAddToList}
+                    disabled={adding || selectedListId === ''}
+                  >
+                    {adding ? 'Agregando...' : 'Confirmar'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* PrimeReact Dialog para Alertas / Notificaciones */}
       <Dialog
@@ -592,7 +760,63 @@ export default function Home() {
         .filter-group select { padding: 0.5rem 1rem; border-radius: 10px; border: 1px solid var(--accent-color); background: var(--white); color: var(--text-dark); font-size: 0.9rem; outline: none; }
 
         .home-content { padding: 0 2rem 4rem; max-width: 1400px; margin: 0 auto; }
-        .results-summary { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; font-weight: 500; }
+        .results-summary-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+        .results-summary { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; margin: 0; }
+        .view-mode-selector { display: flex; align-items: center; }
+
+        /* Custom segmented pill SelectButton */
+        .custom-view-selectbutton.p-selectbutton {
+          display: inline-flex;
+          background: var(--white);
+          border: 1px solid var(--accent-color);
+          border-radius: 30px;
+          padding: 3px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .custom-view-selectbutton .p-button {
+          border: none !important;
+          border-radius: 25px !important;
+          padding: 0.45rem 1rem !important;
+          font-size: 0.85rem !important;
+          font-weight: 600 !important;
+          color: var(--text-muted) !important;
+          background: transparent !important;
+          transition: all 0.2s ease !important;
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          cursor: pointer;
+        }
+
+        .custom-view-selectbutton .p-button:not(.p-highlight):hover {
+          color: var(--text-dark) !important;
+          background: rgba(140, 164, 184, 0.1) !important;
+        }
+
+        .custom-view-selectbutton .p-button.p-highlight {
+          background: var(--brand-blue) !important;
+          color: #ffffff !important;
+          box-shadow: 0 2px 8px rgba(140, 164, 184, 0.45) !important;
+        }
+
+        [data-theme='dark'] .custom-view-selectbutton.p-selectbutton {
+          background: #1e1e1e;
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        [data-theme='dark'] .custom-view-selectbutton .p-button:not(.p-highlight):hover {
+          background: rgba(255, 255, 255, 0.06) !important;
+          color: #f1f3f5 !important;
+        }
+
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1.75rem; }
 
         .product-card {
@@ -622,21 +846,56 @@ export default function Home() {
           display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
           overflow: hidden; text-overflow: ellipsis;
         }
+        .product-stores-availability {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          margin-top: 0.35rem;
+          margin-bottom: 0.6rem;
+        }
+        .product-stores-label {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          font-weight: 600;
+        }
+        .product-stores-badges {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+        .store-badge {
+          background: rgba(140, 164, 184, 0.16);
+          color: var(--brand-blue);
+          border: 1px solid rgba(140, 164, 184, 0.32);
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 6px;
+          display: inline-block;
+          letter-spacing: 0.2px;
+        }
+        [data-theme='dark'] .store-badge {
+          background: rgba(140, 164, 184, 0.12);
+          color: #a5c2d9;
+          border-color: rgba(140, 164, 184, 0.28);
+        }
+
         .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.85rem; border-top: 1px dashed var(--accent-color); }
-        .product-price { font-size: 1.4rem; font-weight: 800; color: var(--brand-blue); margin: 0; }
+        .product-price { font-weight: 800; color: var(--brand-blue); margin: 0; }
         .product-action-btn {
           background: var(--brand-peach);
           color: var(--text-dark);
           border: none;
-          padding: 0.55rem 1rem;
+          padding: 0.6rem 1.1rem;
           border-radius: 10px;
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s;
         }
-        .product-action-btn:hover { filter: brightness(0.95); transform: scale(1.04); }
-        .product-action-btn:active { transform: scale(0.97); }
+        .product-action-btn:hover { filter: brightness(0.95); transform: scale(1.02); }
+        .product-action-btn:active { transform: scale(0.98); }
+        .product-action-btn-full { width: 100%; text-align: center; }
 
         .pagination { display: flex; justify-content: center; align-items: center; gap: 1.25rem; margin-top: 2.5rem; flex-wrap: wrap; }
         .pagination-btn { width: auto; padding: 0.6rem 1.25rem; margin: 0; }
@@ -673,16 +932,67 @@ export default function Home() {
           z-index: 200; padding: 1rem;
         }
         .modal-content {
-          width: 100%; max-width: 480px;
+          width: 100%; max-width: 520px;
           background: var(--white); border-radius: 16px; padding: 1.75rem;
           box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+          max-height: 90vh;
+          overflow-y: auto;
         }
-        .modal-title { font-size: 1.35rem; color: var(--text-dark); font-weight: 800; margin-bottom: 1.25rem; }
-        .modal-product-info { display: flex; gap: 1rem; padding: 1rem; background: var(--secondary-color); border-radius: 12px; margin-bottom: 1.25rem; }
-        .modal-product-img { width: 90px; height: 90px; object-fit: cover; border-radius: 10px; background: var(--white); }
-        .modal-product-name { font-weight: 700; color: var(--text-dark); margin: 0 0 0.25rem 0; line-height: 1.3; }
-        .modal-product-brand { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 0.35rem 0; }
-        .modal-product-price { color: var(--brand-blue); font-weight: 800; font-size: 1.15rem; margin: 0; }
+        .modal-title { font-size: 1.35rem; color: var(--text-dark); font-weight: 800; margin-bottom: 1.15rem; }
+
+        .modal-stores-selection { margin-bottom: 1.25rem; }
+        .modal-selection-title { display: block; margin-bottom: 0.6rem; font-size: 0.9rem; font-weight: 700; color: var(--text-dark); }
+        .modal-stores-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          max-height: 240px;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+
+        .modal-product-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          background: var(--secondary-color);
+          border: 2px solid transparent;
+          border-radius: 12px;
+          margin-bottom: 1.25rem;
+          transition: all 0.2s ease;
+        }
+        .modal-store-card {
+          margin-bottom: 0;
+          cursor: pointer;
+          padding: 0.85rem 1rem;
+        }
+        .modal-store-card:hover {
+          background: rgba(140, 164, 184, 0.12);
+          border-color: rgba(140, 164, 184, 0.35);
+        }
+        .modal-store-card.selected {
+          border-color: var(--brand-blue);
+          background: rgba(140, 164, 184, 0.16);
+          box-shadow: 0 2px 10px rgba(140, 164, 184, 0.2);
+        }
+        .store-radio-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .store-radio-container input[type="radio"] {
+          accent-color: var(--brand-blue);
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+        }
+        .modal-store-details { flex: 1; }
+        .modal-super-name { color: var(--brand-blue); font-weight: 700; }
+        .modal-product-img { width: 68px; height: 68px; object-fit: contain; border-radius: 8px; background: var(--white); padding: 4px; }
+        .modal-product-name { font-weight: 700; color: var(--text-dark); margin: 0 0 0.2rem 0; font-size: 0.95rem; line-height: 1.3; }
+        .modal-product-brand { color: var(--text-muted); font-size: 0.82rem; margin: 0 0 0.25rem 0; }
+        .modal-product-price { color: var(--brand-blue); font-weight: 800; font-size: 1.1rem; margin: 0; }
         .modal-fields { margin-bottom: 1rem; }
         .empty-lists-warning { text-align: center; padding: 1rem; background: #fff7ed; border: 1px dashed #fdba74; border-radius: 10px; color: #9a3412; }
         .empty-lists-warning p { margin: 0 0 0.75rem 0; font-size: 0.9rem; }
