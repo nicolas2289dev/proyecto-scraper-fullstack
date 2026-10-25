@@ -1,5 +1,27 @@
 # Changelog Frontend
 
+## [v3.0] - Refactorización Integral a Arquitectura Feature-Based y Desacoplamiento de Estilos CSS
+- **Arquitectura Feature-Based (`src/app/`, `src/features/`, `src/shared/`)**:
+  - **`src/app/`**: Enrutador central (`AppRoutes.tsx`), layout principal (`MainLayout.tsx`), layout styles (`mainLayout.css`), guardias de ruta (`ProtectedRoute.tsx`, `AdminRoute.tsx`) y provider demo (`DemoAutoLogin.tsx`).
+  - **`src/features/auth/`**: Módulo de autenticación con `LoginPage`, `RegisterPage`, `AuthDialog`, `authStore` (Zustand), `authApi`, tipos DTO y estilos dedicados (`authDialog.css`, `authPage.css`).
+  - **`src/features/navigation/`**: Barra de navegación (`Navbar.tsx`) responsiva, con avatar de usuario, switch de tema y estilos desacoplados (`navbar.css`).
+  - **`src/features/products/`**: Catálogo principal (`HomePage.tsx`), módulo de comparación (`ComparativosPage.tsx`), componentes modulares (`ProductCard`, `ProductFilters`, `ProductPagination`, `AddToListModal`, `AlertModal`), APIs (`productoApi`, `supermercadoApi`), formateadores y estilos (`products.css`, `comparativos.css`).
+  - **`src/features/lists/`**: Gestión de listas de compra (`MyListsPage.tsx`), detalle y optimización (`ListDetailPage.tsx`), cliente API (`listaApi`), tipos y estilos (`myLists.css`, `listDetail.css`).
+  - **`src/features/admin/`**: Panel administrativo (`AdminDashboardPage.tsx`, `AdminUsersPage.tsx`, `AdminCatalogPage.tsx`), cliente `adminApi`, tipos y estilos (`adminDashboard.css`, `adminUsers.css`, `adminCatalog.css`).
+  - **`src/shared/`**: Núcleo reutilizable con cliente Axios desacoplado (`shared/api/axios.ts` con callbacks dinámicos de auth para prevenir dependencias circulares), utilitarios (`cn`, `getErrorMessage`), interfaces comunes (`api.ts`, `supermercado.ts`) y barrel export de UI primitives.
+  - **`src/components/ui/`**: Primitivas de UI basadas en shadcn (`button`, `card`, `dialog`, `badge`, `input`).
+  - Configuración de alias `@/*` en TypeScript (`tsconfig.json`, `tsconfig.app.json`) y Vite (`vite.config.ts`).
+- **Desacoplamiento Total de Estilos CSS**:
+  - Eliminación del 100% de los bloques `<style>` incrustados en componentes React (más de 3,500 líneas extraídas).
+  - Creación de hojas de estilos modulares con clases semánticas consistentes por cada feature.
+- **Correcciones y Mejoras (Bug Fixes & UX)**:
+  - **Filtro de Supermercado en Vista Clásica**: Corrección en `HomePage.tsx` para filtrar las ofertas de cada producto maestro según el `supermercadoId` activo, sincronizando las tarjetas mostradas y el contador total con el filtro seleccionado.
+  - **AuthDialog z-index**: Aumento de z-index a `z-[1000]` en el modal de autenticación para evitar que el Navbar sticky (`z-index: 100`) tape el formulario de login/registro.
+  - **Autofocus en Búsqueda**: Implementación de `useRef` + `useEffect` en `ProductFilters.tsx` para garantizar el foco inmediato en el campo de búsqueda al montar el componente en SPA.
+- **Retrocompatibilidad y Limpieza**:
+  - Capa de compatibilidad retroactiva mantenida en `src/pages/` y `src/api/` para redirigir a los nuevos módulos de features sin romper dependencias legacy.
+  - Eliminación de proxies obsoletos en `src/components/` (`Navbar.tsx`, `Layout.tsx`, `AuthDialog.tsx`).
+
 ## [v2.4] - Filtro Dinámico por Marca en Búsqueda
 - **Componentes:**
   - Se añadió un nuevo filtro desplegable de "Marca" en `Home.tsx`.
