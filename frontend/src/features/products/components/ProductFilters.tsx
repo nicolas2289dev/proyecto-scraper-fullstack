@@ -126,16 +126,17 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             )}
           </div>
 
-          <button
-            type="button"
-            className="product-filters-clear-btn"
-            onClick={onClearFilters}
-            disabled={activeFiltersCount === 0}
-            title="Restablecer todos los filtros"
-          >
-            <RotateCcw size={13} />
-            <span>Limpiar</span>
-          </button>
+          {activeFiltersCount > 0 && (
+            <button
+              type="button"
+              className="product-filters-clear-btn"
+              onClick={onClearFilters}
+              title="Restablecer todos los filtros"
+            >
+              <RotateCcw size={13} />
+              <span>Limpiar</span>
+            </button>
+          )}
         </div>
 
         <div className="product-filters-body">{filterSections}</div>
