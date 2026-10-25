@@ -1,105 +1,157 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
+import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 import type { Supermercado } from '@/shared/types';
+import { CategoryFilterSection } from './filters/CategoryFilterSection';
+import { BrandFilterSection } from './filters/BrandFilterSection';
+import { PriceSortFilterSection } from './filters/PriceSortFilterSection';
+import { SupermarketFilterSection } from './filters/SupermarketFilterSection';
+import { DiscountFilterSection } from './filters/DiscountFilterSection';
+import { FilterDrawer } from './filters/FilterDrawer';
+import '../styles/product-filters.css';
 
-interface ProductFiltersProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  supermarkets: Supermercado[];
-  filterSupermarket: number | 'all';
-  onSupermarketChange: (value: number | 'all') => void;
+export interface ProductFiltersProps {
+  selectedCategoryId: number | 'all';
+  onCategoryChange: (categoryId: number | 'all') => void;
   availableMarcas: string[];
   filterMarca: string | 'all';
-  onMarcaChange: (value: string | 'all') => void;
+  onMarcaChange: (marca: string | 'all') => void;
+  supermarkets: Supermercado[];
+  filterSupermarket: number | 'all';
+  onSupermarketChange: (supermarketId: number | 'all') => void;
+  minPrice: string;
+  maxPrice: string;
+  onMinPriceChange: (val: string) => void;
+  onMaxPriceChange: (val: string) => void;
   sortOrder: 'default' | 'asc' | 'desc';
-  onSortOrderChange: (value: 'default' | 'asc' | 'desc') => void;
-  hasSearched: boolean;
+  onSortOrderChange: (val: 'default' | 'asc' | 'desc') => void;
+  onlyDiscount: boolean;
+  onDiscountToggle: (val: boolean) => void;
+  onClearFilters: () => void;
+  isMobileDrawerOpen?: boolean;
+  onCloseMobileDrawer?: () => void;
+  onApplyMobileFilters?: () => void;
 }
 
 export const ProductFilters: React.FC<ProductFiltersProps> = ({
-  searchTerm,
-  onSearchChange,
-  supermarkets,
-  filterSupermarket,
-  onSupermarketChange,
+  selectedCategoryId,
+  onCategoryChange,
   availableMarcas,
   filterMarca,
   onMarcaChange,
+  supermarkets,
+  filterSupermarket,
+  onSupermarketChange,
+  minPrice,
+  maxPrice,
+  onMinPriceChange,
+  onMaxPriceChange,
   sortOrder,
   onSortOrderChange,
-  hasSearched,
+  onlyDiscount,
+  onDiscountToggle,
+  onClearFilters,
+  isMobileDrawerOpen = false,
+  onCloseMobileDrawer = () => {},
+  onApplyMobileFilters = () => {},
 }) => {
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCategoryId !== 'all') count++;
+    if (filterMarca !== 'all') count++;
+    if (filterSupermarket !== 'all') count++;
+    if (sortOrder !== 'default') count++;
+    if (minPrice !== '' || maxPrice !== '') count++;
+    if (onlyDiscount) count++;
+    return count;
+  }, [
+    selectedCategoryId,
+    filterMarca,
+    filterSupermarket,
+    sortOrder,
+    minPrice,
+    maxPrice,
+    onlyDiscount,
+  ]);
 
-  useEffect(() => {
-    // Garantiza el foco tras el montaje del componente en el DOM
-    searchInputRef.current?.focus();
-  }, []);
+  const filterSections = (
+    <div className="product-filters-sections">
+      <CategoryFilterSection
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={onCategoryChange}
+      />
+
+      <BrandFilterSection
+        availableMarcas={availableMarcas}
+        selectedMarca={filterMarca}
+        onSelectMarca={onMarcaChange}
+      />
+
+      <PriceSortFilterSection
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onMinPriceChange={onMinPriceChange}
+        onMaxPriceChange={onMaxPriceChange}
+        sortOrder={sortOrder}
+        onSortOrderChange={onSortOrderChange}
+      />
+
+      <SupermarketFilterSection
+        supermarkets={supermarkets}
+        selectedSupermarketId={filterSupermarket}
+        onSelectSupermarket={onSupermarketChange}
+      />
+
+      <DiscountFilterSection
+        onlyDiscount={onlyDiscount}
+        onToggleDiscount={onDiscountToggle}
+      />
+    </div>
+  );
 
   return (
-    <div className="controls-container">
-      <div className="search-container">
-        <input
-          ref={searchInputRef}
-          type="text"
-          className="search-input"
-          placeholder="Buscá por producto o marca (ej: Leche La Serenísima, Fideos Matarazzo)..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-      </div>
-
-      {hasSearched && (
-        <div className="filters-bar">
-          <div className="filter-group">
-            <label>🏪 Supermercado:</label>
-            <select
-              value={filterSupermarket}
-              onChange={(e) =>
-                onSupermarketChange(
-                  e.target.value === 'all' ? 'all' : Number(e.target.value)
-                )
-              }
-            >
-              <option value="all">Todos los supermercados</option>
-              {supermarkets.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
+    <>
+      {/* Desktop Sticky Sidebar */}
+      <aside
+        className="product-filters-sidebar"
+        aria-label="Panel de filtros de productos"
+      >
+        <div className="product-filters-header">
+          <div className="product-filters-title-group">
+            <SlidersHorizontal size={18} className="product-filters-main-icon" />
+            <h2 className="product-filters-title">Filtros</h2>
+            {activeFiltersCount > 0 && (
+              <span className="filter-badge-pill" title="Filtros activos">
+                {activeFiltersCount}
+              </span>
+            )}
           </div>
 
-          <div className="filter-group">
-            <label>🏷️ Marca:</label>
-            <select
-              value={filterMarca}
-              onChange={(e) => onMarcaChange(e.target.value)}
-            >
-              <option value="all">Todas las marcas</option>
-              {availableMarcas.map((marca) => (
-                <option key={marca} value={marca}>
-                  {marca}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>💰 Orden:</label>
-            <select
-              value={sortOrder}
-              onChange={(e) =>
-                onSortOrderChange(e.target.value as 'default' | 'asc' | 'desc')
-              }
-            >
-              <option value="default">Por defecto</option>
-              <option value="asc">Precio: Menor a Mayor</option>
-              <option value="desc">Precio: Mayor a Menor</option>
-            </select>
-          </div>
+          <button
+            type="button"
+            className="product-filters-clear-btn"
+            onClick={onClearFilters}
+            disabled={activeFiltersCount === 0}
+            title="Restablecer todos los filtros"
+          >
+            <RotateCcw size={13} />
+            <span>Limpiar</span>
+          </button>
         </div>
-      )}
-    </div>
+
+        <div className="product-filters-body">{filterSections}</div>
+      </aside>
+
+      {/* Mobile / Tablet Drawer */}
+      <FilterDrawer
+        isOpen={isMobileDrawerOpen}
+        onClose={onCloseMobileDrawer}
+        onApply={onApplyMobileFilters}
+        onClear={onClearFilters}
+        activeCount={activeFiltersCount}
+      >
+        {filterSections}
+      </FilterDrawer>
+    </>
   );
 };
 

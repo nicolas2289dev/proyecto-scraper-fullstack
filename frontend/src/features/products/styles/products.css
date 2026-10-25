@@ -92,9 +92,46 @@
 }
 
 .home-content {
-  padding: 0 2rem 4rem;
-  max-width: 1400px;
+  padding: 0 1.5rem 4rem;
+  max-width: 1440px;
   margin: 0 auto;
+}
+
+/* --- Catalog 2-Column Layout --- */
+.catalog-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+  width: 100%;
+}
+
+.catalog-sidebar-column {
+  flex-shrink: 0;
+  width: 290px;
+}
+
+.catalog-main-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.results-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1023px) {
+  .catalog-sidebar-column {
+    display: contents;
+  }
+
+  .catalog-layout {
+    display: block;
+  }
 }
 
 .results-summary-row {
