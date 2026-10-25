@@ -5,6 +5,7 @@ import { LayoutGrid, Layers, SlidersHorizontal } from 'lucide-react';
 
 import { useProductCatalog } from '../hooks/useProductCatalog';
 import { useAddToList } from '../hooks/useAddToList';
+import { HeroBanner } from '../components/HeroBanner';
 import { ProductFilters } from '../components/ProductFilters';
 import { ProductCatalogGrid } from '../components/ProductCatalogGrid';
 import { ProductPagination } from '../components/ProductPagination';
@@ -35,13 +36,6 @@ export function HomePage() {
 
   return (
     <>
-      <header className="home-header">
-        <h1 className="home-title">Comparador de Precios</h1>
-        <p className="subtitle">
-          Encontrá los mejores precios y ahorrá en cada compra.
-        </p>
-      </header>
-
       <main className="home-content">
         <div className="catalog-layout">
           {/* Columna Izquierda: Sidebar de Filtros (Sticky en Desktop, Drawer en Móvil) */}
@@ -70,8 +64,10 @@ export function HomePage() {
             />
           </div>
 
-          {/* Columna Derecha: Catálogo y Resultados */}
+          {/* Columna Derecha: Hero Banner, Catálogo y Resultados */}
           <div className="catalog-main-column">
+            <HeroBanner />
+
             <section className="products-section">
               {catalog.error && catalog.error.startsWith('Para') && (
                 <div className="top-banner">

@@ -10,6 +10,7 @@ export { ComparativosPage } from './pages/ComparativosPage';
 export { ProductCard } from './components/ProductCard';
 export { ProductCatalogGrid } from './components/ProductCatalogGrid';
 export { ProductFilters } from './components/ProductFilters';
+export { HeroBanner } from './components/HeroBanner';
 export { AddToListModal } from './components/AddToListModal';
 export { ProductPagination } from './components/ProductPagination';
 export { AlertModal } from './components/AlertModal';
