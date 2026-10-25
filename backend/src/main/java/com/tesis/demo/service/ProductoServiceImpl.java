@@ -81,16 +81,22 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductoBusquedaDto> buscarConPrecios(String query, String marca, Long supermercadoId, Pageable pageable) {
+        return buscarConPrecios(query, marca, supermercadoId, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductoBusquedaDto> buscarConPrecios(String query, String marca, Long supermercadoId, Long categoriaId, Pageable pageable) {
         Pageable cleanPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
 
         Sort.Order precioOrder = pageable.getSort() != null ? pageable.getSort().getOrderFor("precio") : null;
         Page<Producto> productosPage;
         if (precioOrder != null && precioOrder.isAscending()) {
-            productosPage = productoRepository.buscarProductosMaestrosPrecioAsc(query, marca, supermercadoId, cleanPageable);
+            productosPage = productoRepository.buscarProductosMaestrosPrecioAsc(query, marca, supermercadoId, categoriaId, cleanPageable);
         } else if (precioOrder != null && precioOrder.isDescending()) {
-            productosPage = productoRepository.buscarProductosMaestrosPrecioDesc(query, marca, supermercadoId, cleanPageable);
+            productosPage = productoRepository.buscarProductosMaestrosPrecioDesc(query, marca, supermercadoId, categoriaId, cleanPageable);
         } else {
-            productosPage = productoRepository.buscarProductosMaestrosPorDefecto(query, marca, supermercadoId, cleanPageable);
+            productosPage = productoRepository.buscarProductosMaestrosPorDefecto(query, marca, supermercadoId, categoriaId, cleanPageable);
         }
 
         if (productosPage.isEmpty()) {

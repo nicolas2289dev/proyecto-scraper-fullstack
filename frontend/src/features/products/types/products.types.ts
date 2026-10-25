@@ -1,3 +1,8 @@
+export interface Categoria {
+  id: number;
+  nombre: string;
+}
+
 export interface ProductoTiendaOferta {
   productoId: number;
   supermercadoId: number;

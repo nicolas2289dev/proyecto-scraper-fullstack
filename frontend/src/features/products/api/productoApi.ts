@@ -83,12 +83,14 @@ export const productoApi = {
     page = 0,
     size = 15,
     sort?: string,
-    marca?: string
+    marca?: string,
+    categoriaId?: number
   ): Promise<PaginaProductos> => {
     const params = new URLSearchParams();
     if (nombre) params.append('q', nombre);
     if (supermercadoId) params.append('supermercadoId', supermercadoId.toString());
     if (marca) params.append('marca', marca);
+    if (categoriaId) params.append('categoriaId', categoriaId.toString());
     params.append('page', String(page));
     params.append('size', String(size));
     if (sort) params.append('sort', sort);

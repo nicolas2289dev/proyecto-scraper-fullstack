@@ -32,6 +32,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
            "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:supermercadoId IS NULL OR EXISTS (" +
            "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
            ")) " +
@@ -43,6 +44,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
            "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:supermercadoId IS NULL OR EXISTS (" +
            "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
            ")) " +
@@ -53,6 +55,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
         @Param("query") String query,
         @Param("marca") String marca,
         @Param("supermercadoId") Long supermercadoId,
+        @Param("categoriaId") Long categoriaId,
         Pageable pageable
     );
 
@@ -60,6 +63,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
            "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:supermercadoId IS NULL OR EXISTS (" +
            "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
            ")) " +
@@ -71,6 +75,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
            "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:supermercadoId IS NULL OR EXISTS (" +
            "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
            ")) " +
@@ -81,6 +86,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
         @Param("query") String query,
         @Param("marca") String marca,
         @Param("supermercadoId") Long supermercadoId,
+        @Param("categoriaId") Long categoriaId,
         Pageable pageable
     );
 
@@ -88,6 +94,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
            "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:supermercadoId IS NULL OR EXISTS (" +
            "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
            ")) " +
@@ -99,6 +106,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
            "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:supermercadoId IS NULL OR EXISTS (" +
            "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
            ")) " +
@@ -109,6 +117,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
         @Param("query") String query,
         @Param("marca") String marca,
         @Param("supermercadoId") Long supermercadoId,
+        @Param("categoriaId") Long categoriaId,
         Pageable pageable
     );
 
