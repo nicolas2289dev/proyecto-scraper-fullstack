@@ -86,18 +86,18 @@
   margin-bottom: 1rem;
 }
 
-.hero-badge {
+.admin-hero-badge {
   display: inline-flex;
   align-items: center;
   background: rgba(96, 165, 250, 0.12);
   border: 1px solid rgba(96, 165, 250, 0.2);
   color: #bfdbfe;
-  border-radius: 999px;
   padding: 0.35rem 0.7rem;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  border-radius: 7px;
 }
 
 .hero-trend {

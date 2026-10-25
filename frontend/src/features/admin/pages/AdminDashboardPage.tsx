@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
           <section className="executive-topbar">
             <div className="hero-panel">
               <div className="hero-label-row">
-                <span className="hero-badge">Performance</span>
+                <span className="admin-hero-badge">Performance</span>
                 <span className="hero-trend positive">+18.4% vs último mes</span>
               </div>
 

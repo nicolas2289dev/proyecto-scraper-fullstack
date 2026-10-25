@@ -149,8 +149,7 @@
 
 .navbar-super-badge {
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 9999px;
+  border-right: 1px solid rgba(255, 255, 255, 0.15) ;
   padding: 3px 6px;
   height: 34px;
   display: inline-flex;
@@ -162,12 +161,14 @@
 
 .navbar-super-badge:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.navbar-super-badge:last-child {
+  border-right: none;
 }
 
 .navbar-super-img {
-  height: 22px;
+  height: 33px;
   max-width: 65px;
   width: auto;
   object-fit: contain;
