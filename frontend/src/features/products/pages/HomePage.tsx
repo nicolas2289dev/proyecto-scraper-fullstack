@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useTransition } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LayoutGrid, Layers } from 'lucide-react';
 import type { Supermercado } from '@/shared/types';
@@ -21,11 +21,19 @@ const PAGE_SIZE = 12;
 
 export function HomePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q') || '';
   const isAuthenticated = useAuthStore((state) => !!state.token);
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState(urlQuery);
+  const [appliedSearch, setAppliedSearch] = useState(urlQuery);
+
+  useEffect(() => {
+    setSearchTerm(urlQuery);
+    setAppliedSearch(urlQuery);
+    setPage(0);
+  }, [urlQuery]);
   const [filterSupermarket, setFilterSupermarket] = useState<number | 'all'>('all');
   const [filterMarca, setFilterMarca] = useState<string | 'all'>('all');
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
