@@ -1,0 +1,11 @@
+export * from './types/products.types';
+export * from './api/productoApi';
+export * from './api/supermercadoApi';
+export * from './utils/formatters';
+export { HomePage } from './pages/HomePage';
+export { ComparativosPage } from './pages/ComparativosPage';
+export { ProductCard } from './components/ProductCard';
+export { ProductFilters } from './components/ProductFilters';
+export { AddToListModal } from './components/AddToListModal';
+export { ProductPagination } from './components/ProductPagination';
+export { AlertModal } from './components/AlertModal';

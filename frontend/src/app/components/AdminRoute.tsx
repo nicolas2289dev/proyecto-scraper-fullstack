@@ -1,12 +1,12 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthStore, isAdmin } from '../store/authStore';
+import { useAuthStore, isAdmin } from '@/features/auth';
 
 interface AdminRouteProps {
   children: React.ReactNode;
 }
 
-export default function AdminRoute({ children }: AdminRouteProps) {
+export function AdminRoute({ children }: AdminRouteProps) {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
 
@@ -20,3 +20,5 @@ export default function AdminRoute({ children }: AdminRouteProps) {
 
   return <>{children}</>;
 }
+
+export default AdminRoute;
