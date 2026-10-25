@@ -41,8 +41,9 @@ frontend/src/
 │   │   └── index.ts
 │   └── products/         # Catálogo de productos, filtros, vistas y comparativas
 │       ├── api/          # productoApi.ts, supermercadoApi.ts
-│       ├── components/   # ProductCard, ProductFilters, ProductPagination, Modales
-│       ├── pages/        # HomePage.tsx, ComparativosPage.tsx
+│       ├── components/   # ProductCard, ProductCatalogGrid, ProductFilters, Modales
+│       ├── hooks/        # useProductCatalog.ts, useAddToList.ts (Lógica de estado desacoplada)
+│       ├── pages/        # HomePage.tsx (Thin View Orchestrator), ComparativosPage.tsx
 │       ├── styles/       # products.css, comparativos.css
 │       ├── types/        # products.types.ts
 │       ├── utils/        # formatters.ts
@@ -84,3 +85,8 @@ frontend/src/
 
 4. **Path Alias `@/*`**:
    - Se utiliza `@/` mapeado a `src/` (configurado en `tsconfig.json` y `vite.config.ts`) para evitar rutas relativas frágiles como `../../../../shared`.
+
+5. **Páginas Delgadas y Custom Hooks (Evitar God Components)**:
+   - Las páginas (`pages/*.tsx`) actúan exclusivamente como orquestadores declarativos de vista y layout.
+   - Toda lógica compleja de estado de vista, filtrado, debounce, paginación o llamadas de dominio debe encapsularse en Custom Hooks dedicados dentro de la carpeta `hooks/` de la feature (ej. `useProductCatalog`, `useAddToList`).
+   - Los componentes de renderizado masivo o condicional se aíslan en componentes especializados (ej. `ProductCatalogGrid`).

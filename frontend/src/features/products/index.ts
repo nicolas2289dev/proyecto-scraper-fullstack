@@ -1,10 +1,14 @@
 export * from './types/products.types';
 export * from './api/productoApi';
+export * from './api/categoriaApi';
 export * from './api/supermercadoApi';
 export * from './utils/formatters';
+export * from './hooks/useProductCatalog';
+export * from './hooks/useAddToList';
 export { HomePage } from './pages/HomePage';
 export { ComparativosPage } from './pages/ComparativosPage';
 export { ProductCard } from './components/ProductCard';
+export { ProductCatalogGrid } from './components/ProductCatalogGrid';
 export { ProductFilters } from './components/ProductFilters';
 export { AddToListModal } from './components/AddToListModal';
 export { ProductPagination } from './components/ProductPagination';
