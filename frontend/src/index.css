@@ -64,6 +64,12 @@
   --surface-nested: #070d19;
   --text-dark: #f8fafc;
   --text-muted: #94a3b8;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --bg-card: #0f172a;
+  --bg-subtle: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --bg-input: #070d19;
   --white: #0f172a;
   --error: #ef4444;
   --card-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
@@ -81,6 +87,12 @@
   --surface-nested: #f1f5f9;
   --text-dark: #0f172a;
   --text-muted: #64748b;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --bg-card: #ffffff;
+  --bg-subtle: #f8fafc;
+  --border-color: #e2e8f0;
+  --bg-input: #ffffff;
   --white: #ffffff;
   --error: #ef4444;
   --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
