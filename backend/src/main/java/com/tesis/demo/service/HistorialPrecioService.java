@@ -1,0 +1,20 @@
+package com.tesis.demo.service;
+
+import com.tesis.demo.dto.HistorialPrecioCreateDto;
+import com.tesis.demo.dto.HistorialPrecioDto;
+import com.tesis.demo.dto.ProductoBusquedaDto;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface HistorialPrecioService {
+    HistorialPrecioDto registrar(HistorialPrecioCreateDto dto);
+    HistorialPrecioDto obtenerPorId(Long id);
+    List<HistorialPrecioDto> listarTodos();
+    List<HistorialPrecioDto> listarPorProductoTienda(Long productoTiendaId);
+    HistorialPrecioDto obtenerUltimoPorProductoTienda(Long productoTiendaId);
+    Optional<HistorialPrecioDto> obtenerUltimoPorProductoMaestro(Long productoId);
+    Optional<HistorialPrecioDto> obtenerUltimoPorProductoYSupermercado(Long productoId, Long supermercadoId);
+    List<HistorialPrecioDto> listarHistoricoPorProductoMaestro(Long productoId);
+    List<ProductoBusquedaDto> buscarProductos(String nombre, Long supermercadoId);
+}

@@ -1,0 +1,104 @@
+package com.tesis.demo.repository;
+
+import com.tesis.demo.dto.ProductoBusquedaDto;
+import com.tesis.demo.dto.ProductoTiendaOfertaDto;
+import com.tesis.demo.model.HistorialPrecio;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+@Repository
+public interface HistorialPrecioRepository extends JpaRepository<HistorialPrecio, Long> {
+    List<HistorialPrecio> findByProductoTiendaIdOrderByFechaRecoleccionDesc(Long productoTiendaId);
+    Optional<HistorialPrecio> findTopByProductoTiendaIdOrderByFechaRecoleccionDesc(Long productoTiendaId);
+    void deleteByProductoTiendaId(Long productoTiendaId);
+
+    /**
+     * Consulta personalizada para obtener productos con su último precio, filtrando por nombre (si se proporciona) y supermercado (si se proporciona)
+     */
+    @Query("SELECT new com.tesis.demo.dto.ProductoBusquedaDto(" +
+            "p.id, " +
+            "CASE " +
+            "   WHEN p.nombreGenerico IS NULL THEN '' " +
+            "   WHEN p.varianteEspecifica IS NULL AND p.pesoValor IS NULL AND (p.pesoUnidad IS NULL OR p.pesoUnidad = '') THEN p.nombreGenerico " +
+            "   ELSE CONCAT(" +
+            "       p.nombreGenerico, " +
+            "       CASE WHEN p.varianteEspecifica IS NULL OR p.varianteEspecifica = '' THEN '' ELSE CONCAT(' ', p.varianteEspecifica) END, " +
+            "       CASE WHEN p.pesoValor IS NULL THEN '' ELSE CONCAT(' ', CAST(p.pesoValor AS string)) END, " +
+            "       CASE WHEN p.pesoUnidad IS NULL OR p.pesoUnidad = '' THEN '' ELSE CONCAT(' ', p.pesoUnidad) END" +
+            "   ) " +
+            "END, " +
+            "p.marca, " +
+            "hp.precio, " +
+            "pt.urlImagen, " +
+            "s.nombre) " +
+            "FROM HistorialPrecio hp " +
+            "JOIN hp.productoTienda pt " +
+            "JOIN pt.producto p " +
+            "JOIN pt.supermercado s " +
+            "WHERE hp.fechaRecoleccion = (SELECT MAX(hp2.fechaRecoleccion) FROM HistorialPrecio hp2 WHERE hp2.productoTienda.id = pt.id) " +
+            "AND (:nombre IS NULL OR :nombre = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:nombre AS string), '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:nombre AS string), '%')) OR LOWER(p.varianteEspecifica) LIKE LOWER(CONCAT('%', CAST(:nombre AS string), '%'))) " +
+            "AND (:supermercadoId IS NULL OR s.id = :supermercadoId) " +
+            "ORDER BY hp.precio DESC")
+    List<ProductoBusquedaDto> buscarProductos(@Param("nombre") String nombre, @Param("supermercadoId") Long supermercadoId);
+
+    @Query("SELECT new com.tesis.demo.dto.ProductoBusquedaDto(" +
+           "p.id, p.marca, p.nombreGenerico, c.nombre, p.pesoUnidad, p.pesoValor, " +
+           "p.varianteEspecifica, pt.urlEspecifica, s.nombre, pt.urlImagen, hp.precio) " +
+           "FROM HistorialPrecio hp " +
+           "JOIN hp.productoTienda pt " +
+           "JOIN pt.producto p " +
+           "JOIN p.categoria c " +
+           "JOIN pt.supermercado s " +
+           "WHERE hp.fechaRecoleccion = (" +
+           "    SELECT MAX(hp2.fechaRecoleccion) " +
+           "    FROM HistorialPrecio hp2 " +
+           "    WHERE hp2.productoTienda.id = pt.id" +
+           ") " +
+           "AND (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "     OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:supermercadoId IS NULL OR s.id = :supermercadoId)")
+    Page<ProductoBusquedaDto> buscarProductosConPrecios(@Param("query") String query, @Param("marca") String marca, @Param("supermercadoId") Long supermercadoId, Pageable pageable);
+
+    @Query("SELECT DISTINCT p.marca " +
+           "FROM HistorialPrecio hp " +
+           "JOIN hp.productoTienda pt " +
+           "JOIN pt.producto p " +
+           "JOIN pt.supermercado s " +
+           "WHERE hp.fechaRecoleccion = (" +
+           "    SELECT MAX(hp2.fechaRecoleccion) " +
+           "    FROM HistorialPrecio hp2 " +
+           "    WHERE hp2.productoTienda.id = pt.id" +
+           ") " +
+           "AND p.marca IS NOT NULL " +
+           "AND TRIM(p.marca) != '' " +
+           "AND (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "     OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:supermercadoId IS NULL OR s.id = :supermercadoId) " +
+           "ORDER BY p.marca ASC")
+    List<String> obtenerMarcasDisponibles(@Param("query") String query, @Param("supermercadoId") Long supermercadoId);
+
+    @Query("SELECT new com.tesis.demo.dto.ProductoTiendaOfertaDto(" +
+           "pt.producto.id, s.id, s.nombre, hp.precio, pt.urlImagen, pt.urlEspecifica) " +
+           "FROM HistorialPrecio hp " +
+           "JOIN hp.productoTienda pt " +
+           "JOIN pt.supermercado s " +
+           "WHERE pt.producto.id IN :productoIds " +
+           "AND hp.fechaRecoleccion = (" +
+           "    SELECT MAX(hp2.fechaRecoleccion) " +
+           "    FROM HistorialPrecio hp2 " +
+           "    WHERE hp2.productoTienda.id = pt.id" +
+           ") " +
+           "ORDER BY hp.precio ASC")
+    List<ProductoTiendaOfertaDto> obtenerOfertasPorProductoIds(@Param("productoIds") List<Long> productoIds);
+}

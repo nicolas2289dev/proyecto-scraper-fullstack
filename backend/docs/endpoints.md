@@ -1,0 +1,386 @@
+# Endpoints
+
+## Autenticación
+- POST /api/v1/auth/login
+  - Descripción: Permite a un usuario autenticarse en el sistema.
+  - Request: LoginRequestDto { email, password }
+  - Response: LoginResponseDto { token, email, roles }
+  - Controlador: AuthController
+  - Seguridad: público (permitAll)
+
+## Usuarios
+- POST /api/v1/usuarios
+  - Descripción: Registra un nuevo usuario en el sistema.
+  - Request: UsuarioCreateDto { email, password, nombre, estado }
+  - Response: UsuarioDto { id, email, nombre, estado, roles }
+  - Controlador: UsersController
+  - Seguridad: público (permitAll)
+
+- GET /api/v1/usuarios
+  - Descripción: Obtiene una lista de todos los usuarios registrados.
+  - Response: List<UsuarioDto> { id, email, nombre, estado, roles }
+  - Controlador: UsersController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+- PATCH /api/v1/usuarios/{id}/estado
+  - Descripción: Modifica el estado operativo de una cuenta de usuario (ACTIVO / INACTIVO).
+  - Request: UsuarioEstadoDto { estado }
+  - Response: ApiResponse<UsuarioDto>
+  - Controlador: UsersController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR (CU-09)
+
+- POST /api/v1/usuarios/asignar/roles
+  - Descripción: Asigna un rol específico a un usuario existente.
+  - Request: AssignRoleDto { usuarioId, rolId }
+  - Response: ApiResponse<UsuarioDto>
+  - Controlador: UsersController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+## Roles
+- POST /api/v1/usuarios/roles
+  - Descripción: Crea un nuevo rol en el sistema.
+  - Request: RolDto { nombre }
+  - Response: ApiResponse<Rol>
+  - Controlador: UsersController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+- GET /api/v1/usuarios/roles
+  - Descripción: Obtiene una lista de todos los roles disponibles.
+  - Response: ApiResponse<List<Rol>>
+  - Controlador: UsersController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+## Catálogo Maestro
+### Categorías
+- POST /api/v1/categorias
+  - Descripción: Crea una nueva categoría de producto.
+  - Request: CategoriaDto { nombre }
+  - Response: ApiResponse<CategoriaDto>
+  - Controlador: CategoriaController
+  - Seguridad: requiere JWT
+- GET /api/v1/categorias
+  - Descripción: Obtiene una lista de todas las categorías de productos.
+  - Response: ApiResponse<List<CategoriaDto>>
+  - Controlador: CategoriaController
+  - Seguridad: requiere JWT
+- GET /api/v1/categorias/{id}
+  - Descripción: Obtiene una categoría específica por su ID.
+  - Response: ApiResponse<CategoriaDto>
+  - Controlador: CategoriaController
+  - Seguridad: requiere JWT
+- PUT /api/v1/categorias/{id}
+  - Descripción: Actualiza una categoría existente por su ID.
+  - Request: CategoriaDto { nombre }
+  - Response: ApiResponse<CategoriaDto>
+  - Controlador: CategoriaController
+  - Seguridad: requiere JWT
+- DELETE /api/v1/categorias/{id}
+  - Descripción: Elimina una categoría por su ID.
+  - Response: ApiResponse<Void>
+  - Controlador: CategoriaController
+  - Seguridad: requiere JWT
+
+### Productos (Maestro)
+- POST /api/v1/productos
+  - Descripción: Crea un nuevo producto maestro.
+  - Request: ProductoDto { nombreGenerico, marca, categoriaId }
+  - Response: ApiResponse<ProductoDto>
+  - Controlador: ProductoController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+- GET /api/v1/productos
+  - Descripción: Busca y lista productos maestros con opciones de filtrado y paginación.
+  - Query Params: nombre, marca, categoriaId, page, size, sort
+  - Response: ApiResponse<Page<ProductoDto>>
+  - Controlador: ProductoController
+  - Seguridad: público (permitAll)
+- GET /api/v1/productos/busqueda
+  - Descripción: Busca productos por nombre o marca y devuelve los resultados combinados con su último precio y supermercado.
+  - Query Params: q (término de búsqueda), supermercadoId (opcional), marca (opcional), page, size, sort
+  - Response: ApiResponse<Page<ProductoBusquedaDto>>
+  - Seguridad: público (permitAll)
+- GET /api/v1/productos/busqueda/marcas
+  - Descripción: Devuelve una lista de marcas disponibles para los productos, filtrando por término de búsqueda y supermercado.
+  - Query Params: q (término de búsqueda), supermercadoId (opcional)
+  - Response: ApiResponse<List<String>>
+  - Controlador: ProductoController
+  - Seguridad: público (permitAll)
+- GET /api/v1/productos/{id}
+  - Descripción: Obtiene un producto maestro específico por su ID.
+  - Response: ApiResponse<ProductoDto>
+  - Controlador: ProductoController
+  - Seguridad: público (permitAll)
+- PUT /api/v1/productos/{id}
+  - Descripción: Actualiza un producto maestro existente por su ID.
+  - Request: ProductoDto { nombreGenerico, marca, categoriaId }
+  - Response: ApiResponse<ProductoDto>
+  - Controlador: ProductoController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+- DELETE /api/v1/productos/{id}
+  - Descripción: Elimina un producto maestro por su ID.
+  - Response: ApiResponse<Void>
+  - Controlador: ProductoController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+- GET /api/v1/productos/comparativo/todos
+  - Descripción: Obtiene una lista de productos comparativos con su precio más reciente y nombre del supermercado.
+  - Response: ApiResponse<List<ProductoComparativoDto>>
+  - Controlador: ProductoController
+  - Seguridad: público (permitAll)
+
+## Estructura de Tiendas
+### Supermercados
+- POST /api/v1/supermercados
+  - Descripción: Crea un nuevo supermercado.
+  - Request: SupermercadoDto { nombre, urlBase }
+  - Response: ApiResponse<SupermercadoDto>
+  - Controlador: SupermercadoController
+  - Seguridad: requiere JWT
+- GET /api/v1/supermercados
+  - Descripción: Obtiene una lista de todos los supermercados registrados.
+  - Response: ApiResponse<List<SupermercadoDto>>
+  - Controlador: SupermercadoController
+  - Seguridad: público (permitAll)
+- GET /api/v1/supermercados/{id}
+  - Descripción: Obtiene un supermercado específico por su ID.
+  - Response: ApiResponse<SupermercadoDto>
+  - Controlador: SupermercadoController
+  - Seguridad: público (permitAll)
+- PUT /api/v1/supermercados/{id}
+  - Descripción: Actualiza un supermercado existente por su ID.
+  - Request: SupermercadoDto { nombre, urlBase }
+  - Response: ApiResponse<SupermercadoDto>
+  - Controlador: SupermercadoController
+  - Seguridad: requiere JWT
+- DELETE /api/v1/supermercados/{id}
+  - Descripción: Elimina un supermercado por su ID.
+  - Response: ApiResponse<Void>
+  - Controlador: SupermercadoController
+  - Seguridad: requiere JWT
+
+### Mapeo de Productos (ProductoTienda)
+- POST /api/v1/productos-tienda
+  - Descripción: Crea un nuevo mapeo entre un producto maestro y un supermercado, incluyendo la URL específica para scraping.
+  - Request: ProductoTiendaDto { productoId, supermercadoId, urlEspecifica, codigoExterno, urlImagen }
+  - Response: ApiResponse<ProductoTiendaDto>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+- GET /api/v1/productos-tienda
+  - Descripción: Obtiene una lista de todos los mapeos de productos a tiendas.
+  - Response: ApiResponse<List<ProductoTiendaDto>>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT
+- GET /api/v1/productos-tienda/{id}
+  - Descripción: Obtiene un mapeo específico por su ID.
+  - Response: ApiResponse<ProductoTiendaDto>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT
+- GET /api/v1/productos-tienda/producto/{productoId}
+  - Descripción: Obtiene todos los mapeos para un producto maestro dado su ID.
+  - Response: ApiResponse<List<ProductoTiendaDto>>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT
+- GET /api/v1/productos-tienda/supermercado/{supermercadoId}
+  - Descripción: Obtiene todos los mapeos para un supermercado dado su ID.
+  - Response: ApiResponse<List<ProductoTiendaDto>>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT
+- PUT /api/v1/productos-tienda/{id}
+  - Descripción: Actualiza un mapeo existente por su ID.
+  - Request: ProductoTiendaDto { productoId, supermercadoId, urlEspecifica, codigoExterno, urlImagen }
+  - Response: ApiResponse<ProductoTiendaDto>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+- DELETE /api/v1/productos-tienda/{id}
+  - Descripción: Elimina un mapeo por su ID.
+  - Response: ApiResponse<Void>
+  - Controlador: ProductoTiendaController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+## Historial Precios y Búsqueda de Productos
+- POST /api/v1/precios
+  - Descripción: Registra un nuevo precio para un producto específico en una tienda (ProductoTienda).
+  - Request: HistorialPrecioCreateDto { productoTiendaId, precio, fechaRecoleccion }
+  - Response: ApiResponse<HistorialPrecioDto>
+  - Controlador: HistorialPrecioController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/precios
+  - Descripción: Obtiene una lista de todos los registros de precios históricos.
+  - Response: ApiResponse<List<HistorialPrecioDto>>
+  - Controlador: HistorialPrecioController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/precios/{id}
+  - Descripción: Obtiene un registro de precio específico por su ID.
+  - Response: ApiResponse<HistorialPrecioDto>
+  - Controlador: HistorialPrecioController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/precios/producto-tienda/{productoTiendaId}
+  - Descripción: Obtiene el historial de precios para un mapeo ProductoTienda específico.
+  - Response: ApiResponse<List<HistorialPrecioDto>>
+  - Controlador: HistorialPrecioController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/precios/producto-tienda/{productoTiendaId}/ultimo
+  - Descripción: Obtiene el último precio registrado para un mapeo ProductoTienda específico.
+  - Response: ApiResponse<HistorialPrecioDto>
+  - Controlador: HistorialPrecioController
+  - Seguridad: requiere JWT
+  - Uso principal: obtener el último precio disponible para comparación y optimización
+
+- GET /api/v1/precios/producto-maestro/{productoId}/historico
+  - Descripción: Obtiene el historial consolidado de precios para un Producto Maestro en todos los supermercados vinculados.
+  - Response: ApiResponse<List<HistorialPrecioDto>>
+  - Controlador: HistorialPrecioController
+  - Seguridad: requiere JWT
+  - Uso principal: Dashboard de Tendencias y evolución de precios global por producto genérico.
+
+- GET /api/v1/precios/buscar *(Obsoleto)*
+  - Descripción: Busca productos con su último precio disponible, filtrando por nombre y/o supermercado. Fue reemplazado por `/api/v1/productos/busqueda`.
+  - Query Params: nombre (opcional), supermercadoId (opcional)
+  - Response: ApiResponse<List<ProductoBusquedaDto>>
+  - Controlador: HistorialPrecioController
+  - Seguridad: público (permitAll)
+  - Uso principal: *Legacy* - Anteriormente usado en página de inicio.
+
+## Mis Listas
+- POST /api/v1/listas
+  - Descripción: Crea una nueva lista de compras para el usuario autenticado.
+  - Request: ListaCompraCreateDto { nombreLista, favorita }
+  - Response: ApiResponse<ListaCompraDto> { id, nombreLista, fechaCreacion, favorita }
+  - Controlador: ListaCompraController
+  - Seguridad: requiere JWT (Principal)
+
+- GET /api/v1/listas
+  - Descripción: Obtiene todas las listas de compras del usuario autenticado, incluyendo el detalle de ítems con precios y el total estimado.
+  - Response: ApiResponse<List<ListaCompraDetalleDto>>
+  - Controlador: ListaCompraController
+  - Seguridad: requiere JWT (Principal)
+
+- GET /api/v1/listas/{id}
+  - Descripción: Obtiene una lista de compras específica del usuario autenticado por su ID, incluyendo el detalle de ítems con precios y el total estimado.
+  - Response: ApiResponse<ListaCompraDetalleDto>
+  - Controlador: ListaCompraController
+  - Seguridad: requiere JWT (Principal)
+
+- PUT /api/v1/listas/{id}
+  - Descripción: Actualiza una lista de compras existente del usuario autenticado por su ID.
+  - Request: ListaCompraCreateDto { nombreLista, favorita }
+  - Response: ApiResponse<ListaCompraDto>
+  - Controlador: ListaCompraController
+  - Seguridad: requiere JWT (Principal)
+
+- DELETE /api/v1/listas/{id}
+  - Descripción: Elimina una lista de compras del usuario autenticado por su ID, junto con todos sus ítems.
+  - Response: ApiResponse<Void>
+  - Controlador: ListaCompraController
+  - Seguridad: requiere JWT (Principal)
+
+- PATCH /api/v1/listas/{id}/favorita
+  - Descripción: Alterna el estado "favorita" de una lista de compras del usuario autenticado.
+  - Response: ApiResponse<ListaCompraDto> (Toggle de estado favorita)
+  - Controlador: ListaCompraController
+  - Seguridad: requiere JWT (Principal)
+
+### Items de Lista
+- POST /api/v1/listas/{listaId}/items
+  - Descripción: Agrega un nuevo producto a una lista de compras específica.
+  - Request: ItemListaCreateDto { productoId, cantidad }
+  - Response: ApiResponse<ItemListaDto>
+  - Controlador: ItemListaController
+  - Seguridad: requiere JWT (Principal y propietario de la lista)
+
+- GET /api/v1/listas/{listaId}/items
+  - Descripción: Obtiene todos los ítems de una lista de compras específica.
+  - Response: ApiResponse<List<ItemListaDto>>
+  - Controlador: ItemListaController
+  - Seguridad: requiere JWT (Principal y propietario de la lista)
+
+- GET /api/v1/listas/{listaId}/items/{itemId}
+  - Descripción: Obtiene un ítem específico de una lista de compras por su ID.
+  - Response: ApiResponse<ItemListaDto>
+  - Controlador: ItemListaController
+  - Seguridad: requiere JWT (Principal y propietario de la lista)
+
+- PUT /api/v1/listas/{listaId}/items/{itemId}
+  - Descripción: Actualiza un ítem existente en una lista de compras.
+  - Request: ItemListaCreateDto { productoId, cantidad }
+  - Response: ApiResponse<ItemListaDto>
+  - Controlador: ItemListaController
+  - Seguridad: requiere JWT (Principal y propietario de la lista)
+
+- DELETE /api/v1/listas/{listaId}/items/{itemId}
+  - Descripción: Elimina un ítem específico de una lista de compras.
+  - Response: ApiResponse<Void>
+  - Controlador: ItemListaController
+  - Seguridad: requiere JWT (Principal y propietario de la lista)
+
+- GET /api/v1/listas/{id}/circuito-optimo
+  - Descripción: Genera un circuito de compra óptimo para una lista de compras, indicando qué productos comprar en cada supermercado para obtener el precio mínimo total y el ahorro total.
+  - Response: ApiResponse<OptimizacionCompraDto>
+  - Controlador: OptimizacionController
+  - Seguridad: requiere JWT (Principal y propietario de la lista)
+
+## Criterios de Búsqueda (Configuración del Scraper)
+Permite al administrador configurar qué términos genéricos rastreará el scraper en los supermercados.
+
+- POST /api/v1/criterios-busqueda
+  - Descripción: Crea un nuevo criterio de búsqueda asociado a una categoría.
+  - Request: CriterioBusquedaDto { terminoBusqueda, categoriaId }
+  - Response: ApiResponse<CriterioBusquedaDto>
+  - Controlador: CriterioBusquedaController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/criterios-busqueda
+  - Descripción: Obtiene todos los criterios de búsqueda activos.
+  - Response: ApiResponse<List<CriterioBusquedaDto>>
+  - Controlador: CriterioBusquedaController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/criterios-busqueda/{id}
+  - Descripción: Obtiene un criterio por su ID.
+  - Response: ApiResponse<CriterioBusquedaDto>
+  - Controlador: CriterioBusquedaController
+  - Seguridad: requiere JWT
+
+- GET /api/v1/criterios-busqueda/por-categoria/{categoriaId}
+  - Descripción: Lista los criterios filtrados por categoría.
+  - Response: ApiResponse<List<CriterioBusquedaDto>>
+  - Controlador: CriterioBusquedaController
+  - Seguridad: requiere JWT
+
+- PUT /api/v1/criterios-busqueda/{id}
+  - Descripción: Actualiza un criterio existente.
+  - Request: CriterioBusquedaDto { terminoBusqueda, categoriaId }
+  - Response: ApiResponse<CriterioBusquedaDto>
+  - Controlador: CriterioBusquedaController
+  - Seguridad: requiere JWT
+
+- DELETE /api/v1/criterios-busqueda/{id}
+  - Descripción: Elimina un criterio de búsqueda.
+  - Response: ApiResponse<Void>
+  - Controlador: CriterioBusquedaController
+  - Seguridad: requiere JWT
+
+## Módulo Extractor (API para el Scraper Python)
+Endpoints exclusivos para el bot de scraping. Requieren ROLE_ADMIN o ROLE_ADMINISTRADOR.
+
+- GET /api/v1/extractor/targets
+  - Descripción: Retorna el producto cartesiano de supermercados × criterios_busqueda. El scraper itera sobre esta lista para saber qué buscar en cada tienda.
+  - Response: ApiResponse<List<Map>> donde cada elemento contiene: { supermercadoId, supermercadoNombre, urlBase, palabraClave, categoriaId, categoriaNombre }
+  - Controlador: ExtractorController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+- POST /api/v1/extractor/ingesta-masiva
+  - Descripción: Recibe la lista de productos descubiertos en la grilla de resultados del supermercado. Ejecuta el pipeline: normalización determinista por tokens independiente del orden → deduplicación por EAN/huella única/similitud → inserción o unificación en catálogo maestro → mapeo de oferta en ProductoTienda → registro de precios.
+  - Request: List<ItemIngestaDto> donde cada ítem tiene: { textoCrudoTienda, urlEspecifica, precioActual, disponibilidad, supermercadoId, palabraClaveBuscada, urlImagen, ean, marcaTienda, pesoValor, pesoUnidad }
+  - Response: ApiResponse<IngestaResultadoDto> con: { procesados, nuevosProductos, productosUnificados, preciosRegistrados, errores }
+  - Controlador: ExtractorController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+- POST /api/v1/extractor/reiniciar-catalogo
+  - Descripción: Limpia por completo el catálogo maestro (historial de precios, items de lista, ofertas por tienda, productos y marcas) para permitir reiniciar la base de datos y realizar una ingesta limpia desde cero.
+  - Response: ApiResponse<Void>
+  - Controlador: ExtractorController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR

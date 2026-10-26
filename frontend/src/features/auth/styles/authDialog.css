@@ -1,0 +1,465 @@
+/* ========================================================
+   AUTH DIALOG STYLES (Light Mode Default + Dark Mode Support)
+   ======================================================== */
+
+.p-dialog-dark-wrapper {
+  padding: 1.5rem 1.75rem 1.75rem 1.75rem;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  font-family: inherit;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Encabezado */
+.p-dialog-dark-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.p-dialog-dark-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.p-dialog-dark-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.95rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.p-dialog-dark-close:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+/* Sección de Perfil / Contexto */
+.p-dialog-dark-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.p-dialog-dark-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.p-dialog-dark-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.p-dialog-dark-profile-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.p-dialog-dark-profile-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+/* Píldoras para alternar */
+.p-dialog-dark-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 3px;
+  border-radius: 10px;
+  margin-bottom: 1.35rem;
+  gap: 3px;
+}
+
+.p-dialog-dark-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.p-dialog-dark-tab.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Alertas */
+.p-dialog-dark-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+.p-dialog-dark-alert.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.p-dialog-dark-alert.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Campos de formulario */
+.p-dialog-dark-field {
+  margin-bottom: 1.15rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.p-dialog-dark-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.p-dialog-dark-label {
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 0.45rem;
+}
+
+.p-dialog-dark-label-row .p-dialog-dark-label {
+  margin-bottom: 0;
+}
+
+.p-dialog-dark-eye-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.p-dialog-dark-eye-btn:hover {
+  color: #0f172a;
+}
+
+.p-dialog-dark-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.p-dialog-dark-input:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+
+.p-dialog-dark-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.p-dialog-dark-input::placeholder {
+  color: #94a3b8;
+}
+
+.p-dialog-dark-error-msg {
+  color: #dc2626;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+  font-weight: 500;
+}
+
+/* Footer con botones */
+.p-dialog-dark-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.p-dialog-dark-btn-cancel {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.p-dialog-dark-btn-cancel:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.p-dialog-dark-btn-save {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.35rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.p-dialog-dark-btn-save:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.p-dialog-dark-btn-save:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.p-dialog-dark-btn-save:disabled,
+.p-dialog-dark-btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Enlace de cambio en el pie */
+.p-dialog-dark-switch-text {
+  text-align: center;
+  margin-top: 1.2rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.p-dialog-dark-switch-link {
+  background: transparent;
+  border: none;
+  color: #0284c7;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.p-dialog-dark-switch-link:hover {
+  color: #0369a1;
+}
+
+/* ========================================================
+   MODO OSCURO (DARK MODE) OVERRIDES
+   ======================================================== */
+[data-theme='dark'] .p-dialog-dark-wrapper,
+.dark .p-dialog-dark-wrapper {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme='dark'] .p-dialog-dark-title,
+.dark .p-dialog-dark-title {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .p-dialog-dark-close,
+.dark .p-dialog-dark-close {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .p-dialog-dark-close:hover,
+.dark .p-dialog-dark-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .p-dialog-dark-profile,
+.dark .p-dialog-dark-profile {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .p-dialog-dark-avatar,
+.dark .p-dialog-dark-avatar {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme='dark'] .p-dialog-dark-profile-name,
+.dark .p-dialog-dark-profile-name {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .p-dialog-dark-profile-desc,
+.dark .p-dialog-dark-profile-desc {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .p-dialog-dark-tabs,
+.dark .p-dialog-dark-tabs {
+  background: #070d19;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .p-dialog-dark-tab,
+.dark .p-dialog-dark-tab {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .p-dialog-dark-tab.active,
+.dark .p-dialog-dark-tab.active {
+  background: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .p-dialog-dark-alert.success,
+.dark .p-dialog-dark-alert.success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+[data-theme='dark'] .p-dialog-dark-alert.error,
+.dark .p-dialog-dark-alert.error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme='dark'] .p-dialog-dark-label,
+.dark .p-dialog-dark-label {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .p-dialog-dark-eye-btn,
+.dark .p-dialog-dark-eye-btn {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .p-dialog-dark-eye-btn:hover,
+.dark .p-dialog-dark-eye-btn:hover {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .p-dialog-dark-input,
+.dark .p-dialog-dark-input {
+  background: #070d19;
+  border-color: #1e293b;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .p-dialog-dark-input:focus,
+.dark .p-dialog-dark-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 1px #38bdf8;
+}
+
+[data-theme='dark'] .p-dialog-dark-input.error,
+.dark .p-dialog-dark-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+[data-theme='dark'] .p-dialog-dark-input::placeholder,
+.dark .p-dialog-dark-input::placeholder {
+  color: #475569;
+}
+
+[data-theme='dark'] .p-dialog-dark-error-msg,
+.dark .p-dialog-dark-error-msg {
+  color: #f87171;
+}
+
+[data-theme='dark'] .p-dialog-dark-btn-cancel,
+.dark .p-dialog-dark-btn-cancel {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: none;
+}
+
+[data-theme='dark'] .p-dialog-dark-btn-cancel:hover:not(:disabled),
+.dark .p-dialog-dark-btn-cancel:hover:not(:disabled) {
+  background: #334155;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .p-dialog-dark-btn-save,
+.dark .p-dialog-dark-btn-save {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme='dark'] .p-dialog-dark-btn-save:hover:not(:disabled),
+.dark .p-dialog-dark-btn-save:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+[data-theme='dark'] .p-dialog-dark-switch-text,
+.dark .p-dialog-dark-switch-text {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .p-dialog-dark-switch-link,
+.dark .p-dialog-dark-switch-link {
+  color: #38bdf8;
+}
+
+[data-theme='dark'] .p-dialog-dark-switch-link:hover,
+.dark .p-dialog-dark-switch-link:hover {
+  color: #7dd3fc;
+}

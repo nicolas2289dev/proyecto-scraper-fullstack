@@ -1,0 +1,89 @@
+package com.tesis.demo.controller;
+
+import com.tesis.demo.dto.ApiResponse;
+import com.tesis.demo.dto.ProductoBusquedaDto;
+import com.tesis.demo.dto.ProductoComparativoDto;
+import com.tesis.demo.dto.ProductoDto;
+import com.tesis.demo.service.ProductoService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/productos")
+@RequiredArgsConstructor
+public class ProductoController {
+
+    private final ProductoService productoService;
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRADOR')")
+    public ResponseEntity<ApiResponse<ProductoDto>> crear(@Valid @RequestBody ProductoDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Producto creado", productoService.crear(dto)));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProductoDto>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(productoService.obtenerPorId(id)));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<ProductoDto>>> buscar(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) Long categoriaId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(productoService.buscar(nombre, marca, categoriaId, pageable)));
+    }
+
+    @GetMapping("/busqueda")
+    public ResponseEntity<ApiResponse<Page<ProductoBusquedaDto>>> buscarConPrecios(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) Long supermercadoId,
+            @RequestParam(required = false) Long categoriaId,
+            @PageableDefault(size = 12) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(productoService.buscarConPrecios(q, marca, supermercadoId, categoriaId, pageable)));
+    }
+
+    @GetMapping("/busqueda/marcas")
+    public ResponseEntity<ApiResponse<List<String>>> obtenerMarcasDisponibles(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long supermercadoId) {
+        return ResponseEntity.ok(ApiResponse.success(productoService.obtenerMarcasDisponibles(q, supermercadoId)));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRADOR')")
+    public ResponseEntity<ApiResponse<ProductoDto>> actualizar(@PathVariable Long id, @Valid @RequestBody ProductoDto dto) {
+        return ResponseEntity.ok(ApiResponse.success("Producto actualizado", productoService.actualizar(id, dto)));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRADOR')")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        productoService.eliminar(id);
+        return ResponseEntity.ok(ApiResponse.success("Producto eliminado", null));
+    }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRADOR')")
+    public ResponseEntity<ApiResponse<Void>> eliminarMasivo(@RequestBody List<Long> ids) {
+        productoService.eliminarMasivo(ids);
+        return ResponseEntity.ok(ApiResponse.success("Productos eliminados", null));
+    }
+
+    @GetMapping("/comparativo/todos")
+    public ResponseEntity<ApiResponse<List<ProductoComparativoDto>>> obtenerComparativos() {
+        return ResponseEntity.ok(ApiResponse.success("Productos comparativos", productoService.obtenerProductosComparativos()));
+    }
+}
