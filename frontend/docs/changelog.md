@@ -1,5 +1,93 @@
 # Changelog Frontend
 
+## [v3.4] - Hero Banner Superior de Ofertas & Ahorro
+- **Nuevo Componente HeroBanner (`src/features/products/components/HeroBanner.tsx`):**
+  - Incorporado en la cabecera de la columna principal del catálogo (`.catalog-main-column`), alineado armónicamente con el sidebar de filtros.
+  - Badge píldora `✨ AHORRÁ EN TUS COMPRAS` con gradiente esmeralda y soporte de temas.
+  - Título principal `"Compará precios en los principales supermercados"` y subtítulo explicativo de ahorro de tiempo y dinero.
+  - Fila de logotipos de las cadenas integradas (Comodín, Día y Vea) en chips blancos destacados con sombra y micro-interacciones hover.
+  - Gráfica recortada de alta definición de bolsa de compras con alimentos frescos (`/images/hero-groceries.png`) con transparencia alfa perfecta, sin rebordes ni cajas blancas residuales.
+- **Estilos Desacoplados y Responsivos (`src/features/products/styles/hero-banner.css`):**
+  - Soporte completo para Modo Claro (gradiente menta/verde suave) y Modo Oscuro (gradiente esmeralda/pizarra con iluminación interior).
+  - Breakpoints responsivos para desktop, tablets (< 960px) y móviles (< 680px) con reorganización vertical limpia.
+- **Reemplazo de Cabecera Legacy en `HomePage.tsx`:**
+  - Retiro definitivo del antiguo bloque `.home-header` de fondo oscuro y ajuste del padding superior del catálogo a `1.75rem`.
+  - Exportación del componente desde `src/features/products/index.ts`.
+
+## [v3.3] - Desacoplamiento de HomePage (Clean Architecture, Custom Hooks y Grilla Modular)
+- **Eliminación de God Component en `HomePage.tsx`:**
+  - Reducción drástica del archivo de más de 620 líneas a un orquestador declarativo y conciso de ~180 líneas, enfocado exclusivamente en layout y composición.
+  - Creación del hook `useProductCatalog` (`src/features/products/hooks/useProductCatalog.ts`) para encapsular estados de filtros, búsqueda con debounce, llamadas a `productoApi`, paginación y cálculos derivados en memoria (`filteredProducts`, `activeFiltersCount`).
+  - Creación del hook `useAddToList` (`src/features/products/hooks/useAddToList.ts`) para aislar la lógica de autenticación, modales de adición a listas de compra, selección de tienda/cantidad y feedback de errores/alertas.
+  - Creación del componente de presentación `ProductCatalogGrid` (`src/features/products/components/ProductCatalogGrid.tsx`) para aislar el renderizado de tarjetas en modo compacto vs clásico (expansión de tiendas), skeletons de carga y estado vacío.
+- **Ajuste Elástico de Altura del Sidebar:**
+  - Configurado `height: fit-content;` con `align-items: flex-start` en `.catalog-layout`, logrando que el sidebar abrace y ajuste su altura dinámicamente cuando los acordeones se contraen o expanden sin dejar espacios en blanco sobrantes.
+
+## [v3.2] - Nuevo Sidebar de Filtros Moderno & Drawer Móvil
+- **Sidebar de Filtros Sticky con Acordeones:**
+  - Rediseño modular con subcomponentes: `CategoryFilterSection`, `BrandFilterSection`, `PriceSortFilterSection`, `SupermarketFilterSection` y `DiscountFilterSection`.
+  - Acordeones colapsables independientes con animaciones fluidas y persistencia visual.
+  - Búsqueda de marcas en tiempo real con debounce integrado en el acordeón de marcas.
+  - Filtro por rango de precio (mínimo y máximo) y ordenamiento por precio ('Por defecto', 'Menor a mayor', 'Mayor a menor').
+- **Drawer Móvil y Tablet (< 1024px):**
+  - Implementación del componente `FilterDrawer` que abre un sheet lateral deslizante mediante botón flotante con badge de filtros activos.
+  - Bloqueo de scroll en `body` cuando el drawer está abierto y cierre mediante botón o click en overlay.
+
+## [v3.1] - Rediseño del Navbar, Atajos Rápidos y Modales de Información de Supermercados
+- **Búsqueda Central en Navbar:**
+  - Input de búsqueda global desacoplado (`NavbarSearch.tsx`) con debounce de 350ms sincronizado con la URL (`?q=...`) y la página de catálogo.
+- **Logos de Supermercados y Modales Informativos:**
+  - Atajos rápidos a supermercados con logos oficiales en SVG (`CartBrandIcon.tsx`).
+  - Modal informativo modal (`SupermarketInfoModal.tsx`) con información de sucursales, horarios y enlaces oficiales.
+- **Menú de Usuario y Tema:**
+  - Menú desplegable flotante de usuario (`UserDropdownMenu.tsx`) con opciones de perfil, mis listas, panel de administración y cierre de sesión.
+  - Switch de tema claro/oscuro con iconos animados y persistencia en `localStorage`.
+
+## [v3.0] - Refactorización Integral a Arquitectura Feature-Based y Desacoplamiento de Estilos CSS
+- **Arquitectura Feature-Based (`src/app/`, `src/features/`, `src/shared/`)**:
+  - **`src/app/`**: Enrutador central (`AppRoutes.tsx`), layout principal (`MainLayout.tsx`), layout styles (`mainLayout.css`), guardias de ruta (`ProtectedRoute.tsx`, `AdminRoute.tsx`) y provider demo (`DemoAutoLogin.tsx`).
+  - **`src/features/auth/`**: Módulo de autenticación con `LoginPage`, `RegisterPage`, `AuthDialog`, `authStore` (Zustand), `authApi`, tipos DTO y estilos dedicados (`authDialog.css`, `authPage.css`).
+  - **`src/features/navigation/`**: Barra de navegación (`Navbar.tsx`) responsiva, con avatar de usuario, switch de tema y estilos desacoplados (`navbar.css`).
+  - **`src/features/products/`**: Catálogo principal (`HomePage.tsx`), módulo de comparación (`ComparativosPage.tsx`), componentes modulares (`ProductCard`, `ProductFilters`, `ProductPagination`, `AddToListModal`, `AlertModal`), APIs (`productoApi`, `supermercadoApi`), formateadores y estilos (`products.css`, `comparativos.css`).
+  - **`src/features/lists/`**: Gestión de listas de compra (`MyListsPage.tsx`), detalle y optimización (`ListDetailPage.tsx`), cliente API (`listaApi`), tipos y estilos (`myLists.css`, `listDetail.css`).
+  - **`src/features/admin/`**: Panel administrativo (`AdminDashboardPage.tsx`, `AdminUsersPage.tsx`, `AdminCatalogPage.tsx`), cliente `adminApi`, tipos y estilos (`adminDashboard.css`, `adminUsers.css`, `adminCatalog.css`).
+  - **`src/shared/`**: Núcleo reutilizable con cliente Axios desacoplado (`shared/api/axios.ts` con callbacks dinámicos de auth para prevenir dependencias circulares), utilitarios (`cn`, `getErrorMessage`), interfaces comunes (`api.ts`, `supermercado.ts`) y barrel export de UI primitives.
+  - **`src/components/ui/`**: Primitivas de UI basadas en shadcn (`button`, `card`, `dialog`, `badge`, `input`).
+  - Configuración de alias `@/*` en TypeScript (`tsconfig.json`, `tsconfig.app.json`) y Vite (`vite.config.ts`).
+- **Desacoplamiento Total de Estilos CSS**:
+  - Eliminación del 100% de los bloques `<style>` incrustados en componentes React (más de 3,500 líneas extraídas).
+  - Creación de hojas de estilos modulares con clases semánticas consistentes por cada feature.
+- **Correcciones y Mejoras (Bug Fixes & UX)**:
+  - **Filtro de Supermercado en Vista Clásica**: Corrección en `HomePage.tsx` para filtrar las ofertas de cada producto maestro según el `supermercadoId` activo, sincronizando las tarjetas mostradas y el contador total con el filtro seleccionado.
+  - **AuthDialog z-index**: Aumento de z-index a `z-[1000]` en el modal de autenticación para evitar que el Navbar sticky (`z-index: 100`) tape el formulario de login/registro.
+  - **Autofocus en Búsqueda**: Implementación de `useRef` + `useEffect` en `ProductFilters.tsx` para garantizar el foco inmediato en el campo de búsqueda al montar el componente en SPA.
+- **Retrocompatibilidad y Limpieza**:
+  - Capa de compatibilidad retroactiva mantenida en `src/pages/` y `src/api/` para redirigir a los nuevos módulos de features sin romper dependencias legacy.
+  - Eliminación de proxies obsoletos en `src/components/` (`Navbar.tsx`, `Layout.tsx`, `AuthDialog.tsx`).
+
+## [v2.4] - Filtro Dinámico por Marca en Búsqueda
+- **Componentes:**
+  - Se añadió un nuevo filtro desplegable de "Marca" en `Home.tsx`.
+  - El filtro se habilita dinámicamente y se rellena solo con las marcas disponibles de los resultados actuales de la búsqueda.
+- **API:**
+  - Actualización de `productoApi.ts` para enviar el parámetro `marca` en `buscarPaginado`.
+  - Se añadió `obtenerMarcas` para consultar `GET /productos/busqueda/marcas`.
+- **Correcciones (Hotfixes):**
+  - Se optimizaron los hooks `useEffect` en `Home.tsx` eliminando llamadas redundantes a `fetchProducts` durante el montaje inicial, lo que reducía el rendimiento y generaba peticiones duplicadas a la API.
+
+## [v2.3] - Paginación, Ordenamiento y Endpoints de Búsqueda
+- **Home (Paginación y UI):**
+  - Se actualizó `Home.tsx` para consumir el nuevo endpoint `/busqueda` paginado, abandonando la antigua ruta `/comparativo/todos`.
+  - Se añadieron controles de paginación reales (botones Anterior/Siguiente) basados en `totalPages` y `page` enviados por el backend.
+  - Se añadió la información de la cantidad total de resultados (`totalElements`).
+- **Ordenamiento (Server-Side):**
+  - Se delegó el ordenamiento por precio al backend, enviando dinámicamente el parámetro `sort` (`precio,asc` o `precio,desc`) desde React hacia el servidor.
+- **API (productoApi.ts):**
+  - Se actualizó el endpoint base de búsqueda de productos hacia `/productos/busqueda`.
+  - Se implementó la nueva función `buscarPaginado` en `productoApi.ts` que devuelve la interfaz `PaginaProductos` en lugar de una lista plana, soportando parámetros de paginación y ordenamiento.
+- **Tipos:**
+  - Se agregaron las interfaces `PaginaProductos` y actualizadas las estructuras en `types/Supermercado.ts` para manejar la respuesta paginada del servidor.
+
 ## Estructura Inicial
 - Configuración del proyecto con Vite, React y TypeScript.
 - Integración de Tailwind CSS para el diseño.
@@ -39,9 +127,9 @@
 - **Flujo de carga**:
   1. Carga inicial paralela (`Promise.all`): `supermercadoApi.getAll()` + `listaApi.getAll()` para supermercados y listas.
   2. `fetchProducts()` dispara `productoApi.buscar(nombre?, supermercadoId?)` con los filtros del usuario.
-- **Búsqueda SERVER-SIDE con debounce 400ms**: Al escribir en el input, el término se envía como query param `nombre` al backend (no se filtra en cliente). Evita requests spam mientras tipeás.
-- **Filtro por supermercado SERVER-SIDE**: Ahora el select usa el `id` real del supermercado y envía `supermercadoId` al endpoint (antes comparaba strings de nombre). Opción "Todos" = sin filtro.
-- **Ordenamiento por precio CLIENTE**: selector Por defecto / Menor a Mayor / Mayor a Menor aplicado sobre los resultados ya filtrados del backend.
+- **Búsqueda SERVER-SIDE con debounce 400ms**: Al escribir en el input, el término se envía como query param al backend.
+- **Filtro por supermercado SERVER-SIDE**: Ahora el select usa el `id` real del supermercado.
+- **Ordenamiento por precio SERVER-SIDE**: Selector Por defecto / Menor a Mayor / Mayor a Menor aplicado desde la paginación de base de datos.
 - **Skeleton de carga animado**: 6 tarjetas shimmer mientras carga el Home inicial (reemplaza el texto "Cargando productos...").
 - **Estado "Buscando..."** en el contador de resultados para búsqueda/filtros asíncronos (para distinguir del loading inicial).
 - **Banner de error + botón Reintentar** cuando falla la conexión al backend.

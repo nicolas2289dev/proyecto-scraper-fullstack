@@ -17,7 +17,7 @@ from .config import (
 )
 from .api_client import ApiClient
 from .scrapers.scraper_factory import ScraperFactory
-from .utils.normalizers import clean_price, parse_weight
+from .utils.normalizers import clean_price, clean_title, parse_weight
 
 # Configurar logging centralizado
 setup_logging()
@@ -382,7 +382,7 @@ async def discovery_mode_run(api_client: ApiClient, page) -> None:
         # 4. Construir payload de ingesta masiva
         items_ingesta: List[Dict[str, Any]] = []
         for prod in productos_raw:
-            titulo = prod.get("titulo") or ""
+            titulo = clean_title(prod.get("titulo"))
             url_producto = prod.get("url") or ""
             url_imagen = prod.get("url_imagen") or ""
             precio_texto = prod.get("precio_texto")
@@ -390,11 +390,18 @@ async def discovery_mode_run(api_client: ApiClient, page) -> None:
             if not titulo or not url_producto:
                 continue
 
-            # Parsear precio usando normalizer existente
-            precio_float: float | None = None
-            if precio_texto:
-                from .utils.normalizers import clean_price
+            # Precio: numérico si viene de la API VTEX; si no, parsear el texto de la tarjeta del DOM
+            precio_float: float | None = prod.get("precio")
+            if precio_float is None and precio_texto:
                 precio_float = clean_price(precio_texto)
+
+            # Omitir productos sin stock o sin precio positivo válido
+            disponible = prod.get("disponible", True)
+            if not disponible or precio_float is None or precio_float <= 0:
+                continue
+
+            # Peso pre-parseado (el backend lo usa solo si no logra extraerlo del título)
+            peso = parse_weight(titulo)
 
             items_ingesta.append({
                 "textoCrudoTienda":   titulo,
@@ -403,7 +410,12 @@ async def discovery_mode_run(api_client: ApiClient, page) -> None:
                 "disponibilidad":     True,
                 "supermercadoId":     supermercado_id,
                 "palabraClaveBuscada": palabra_clave,
-                "urlImagen":          url_imagen
+                "urlImagen":          url_imagen,
+                # Datos estructurados que permiten unificar el producto maestro entre tiendas
+                "ean":                prod.get("ean"),
+                "marcaTienda":        prod.get("marca"),
+                "pesoValor":          peso["peso_valor"],
+                "pesoUnidad":         peso["peso_unidad"],
             })
 
         stats_discovery["procesados"] += 1

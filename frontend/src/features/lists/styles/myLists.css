@@ -1,0 +1,179 @@
+.my-lists-container {
+  max-width: 900px;
+  background: var(--white);
+  border: 1px solid var(--accent-color);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  margin: 60px auto;
+}
+
+.my-lists-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.my-lists-form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.my-lists-form-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.my-lists-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.my-lists-btn-submit {
+  width: auto !important;
+  padding: 0 1.5rem !important;
+}
+
+.my-lists-btn-cancel {
+  background-color: #6b7280;
+  width: auto;
+  padding: 0 1rem;
+}
+
+.my-lists-btn-cancel:hover {
+  background-color: #4b5563;
+}
+
+.my-lists-error-banner {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.my-lists-items-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.my-lists-empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.my-lists-empty-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.my-lists-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background-color: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--accent-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.my-lists-card.favorite {
+  border: 2px solid #fbbf24;
+}
+
+.my-lists-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.my-lists-card-main {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.my-lists-star-btn {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.my-lists-star-btn.active {
+  color: #fbbf24;
+}
+
+.my-lists-star-btn:hover {
+  transform: scale(1.2);
+}
+
+.my-lists-card-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 1.1rem;
+}
+
+.my-lists-card-details {
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.my-lists-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.my-lists-btn-edit {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+}
+
+.my-lists-btn-edit:hover {
+  background-color: rgba(37, 99, 235, 0.2);
+}
+
+.my-lists-btn-delete {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+}
+
+.my-lists-btn-delete:hover {
+  background-color: rgba(220, 38, 38, 0.2);
+}

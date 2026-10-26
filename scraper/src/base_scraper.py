@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
+import asyncio
 import logging
 from typing import Dict, Any, Optional, List
 from playwright.async_api import Page
+from urllib.parse import urlparse
+
+from .utils.vtex_api import build_vtex_search_url, parse_vtex_products, fetch_vtex_products_fallback
+from .utils.normalizers import clean_title
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +247,51 @@ class BaseScraper(ABC):
             logger.warning(f"[{store}] No se pudo extraer la URL del producto de la página de búsqueda.")
             return None
 
+    async def _extract_via_vtex_api(self, page: Page, search_url: str, keyword: str) -> List[Dict[str, Any]]:
+        """
+        Intenta obtener la grilla de resultados desde la API pública de catálogo de VTEX.
+
+        Entrega marca (``brand``), EAN, precio y stock estructurados, que permiten al backend
+        unificar el producto maestro entre tiendas. Reutiliza el contexto del navegador
+        (cookies, user-agent) mediante ``page.request``.
+
+        Returns:
+            Lista de tarjetas en formato interno, o lista vacía si la tienda no expone la API
+            (para que el llamador use el scraping del DOM como respaldo).
+        """
+        store = self.get_store_name()
+        parsed = urlparse(search_url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
+        api_url = build_vtex_search_url(base_url, keyword)
+
+        data = None
+        # 1. Intentar primero con page.request de Playwright (reutiliza sesión/cookies del navegador)
+        try:
+            response = await page.request.get(
+                api_url,
+                headers={"Accept": "application/json", "Accept-Language": "es-AR,es;q=0.9"},
+                timeout=20000,
+            )
+            # VTEX responde 206 (Partial Content) cuando se usa paginación _from/_to
+            if response.status in (200, 206):
+                data = await response.json()
+            else:
+                logger.info(f"[{store}] page.request VTEX no disponible (HTTP {response.status}).")
+        except Exception as e:
+            logger.info(f"[{store}] page.request VTEX abortado o fallido ({e}). Intentando fallback HTTP directo...")
+
+        # 2. Respaldo HTTP directo con requests si Playwright fue abortado por CloudFront / red (evita ECONNABORTED)
+        if not data:
+            data = await asyncio.to_thread(fetch_vtex_products_fallback, api_url)
+
+        if not data or not isinstance(data, list):
+            logger.info(f"[{store}] API VTEX no utilizable. Se usará el DOM.")
+            return []
+
+        productos = parse_vtex_products(data, base_url)
+        logger.info(f"[{store}] API VTEX: {len(productos)} productos para '{keyword}'.")
+        return productos
+
     async def extract_all_products_from_search(
         self,
         page: Page,
@@ -273,6 +323,13 @@ class BaseScraper(ABC):
         """
         store = self.get_store_name()
         logger.info(f"[{store}] Extrayendo todos los productos para keyword='{keyword}' en: {search_url}")
+
+        # Estrategia 1 (preferida): API de catálogo VTEX → marca, EAN y precio estructurados
+        productos_api = await self._extract_via_vtex_api(page, search_url, keyword)
+        if productos_api:
+            return productos_api
+
+        # Estrategia 2 (respaldo): scraping de la grilla en el DOM
 
         await page.set_extra_http_headers({
             "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
@@ -351,7 +408,7 @@ class BaseScraper(ABC):
                     // Extraer Título: buscar elementos con clases de nombre o h1/h2/h3
                     let titulo = "";
                     const titleEls = card.querySelectorAll(
-                        "[class*='product-name'], [class*='productName'], [class*='name'], h1, h2, h3, span[class*='title']"
+                        "[class*='product-name'], [class*='productName'], h1, h2, h3, [class*='product-title'], span[class*='title'], [class*='name']"
                     );
                     for (let el of titleEls) {
                         const t = (el.innerText || '').trim();
@@ -496,7 +553,7 @@ class BaseScraper(ABC):
                     url_producto = f"{parsed.scheme}://{parsed.netloc}{url_producto}"
 
                 productos_encontrados.append({
-                    "titulo": item["titulo"],
+                    "titulo": clean_title(item["titulo"]),
                     "url": url_producto,
                     "precio_texto": item["precio_texto"],
                     "url_imagen": item["url_imagen"]

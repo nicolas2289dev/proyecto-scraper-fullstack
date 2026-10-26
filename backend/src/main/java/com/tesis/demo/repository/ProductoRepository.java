@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
@@ -27,12 +28,111 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
         Pageable pageable
     );
 
+    @Query(value = "SELECT p FROM Producto p " +
+           "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
+           "AND (:supermercadoId IS NULL OR EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
+           ")) " +
+           "AND EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt2 JOIN HistorialPrecio hp ON hp.productoTienda.id = pt2.id WHERE pt2.producto.id = p.id" +
+           ") " +
+           "ORDER BY p.nombreGenerico ASC, p.marca ASC",
+           countQuery = "SELECT COUNT(p) FROM Producto p " +
+           "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
+           "AND (:supermercadoId IS NULL OR EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
+           ")) " +
+           "AND EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt2 JOIN HistorialPrecio hp ON hp.productoTienda.id = pt2.id WHERE pt2.producto.id = p.id" +
+           ")")
+    Page<Producto> buscarProductosMaestrosPorDefecto(
+        @Param("query") String query,
+        @Param("marca") String marca,
+        @Param("supermercadoId") Long supermercadoId,
+        @Param("categoriaId") Long categoriaId,
+        Pageable pageable
+    );
+
+    @Query(value = "SELECT p FROM Producto p " +
+           "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
+           "AND (:supermercadoId IS NULL OR EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
+           ")) " +
+           "AND EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt2 JOIN HistorialPrecio hp ON hp.productoTienda.id = pt2.id WHERE pt2.producto.id = p.id" +
+           ") " +
+           "ORDER BY (SELECT MIN(hp.precio) FROM HistorialPrecio hp JOIN hp.productoTienda pt WHERE pt.producto.id = p.id) ASC",
+           countQuery = "SELECT COUNT(p) FROM Producto p " +
+           "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
+           "AND (:supermercadoId IS NULL OR EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
+           ")) " +
+           "AND EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt2 JOIN HistorialPrecio hp ON hp.productoTienda.id = pt2.id WHERE pt2.producto.id = p.id" +
+           ")")
+    Page<Producto> buscarProductosMaestrosPrecioAsc(
+        @Param("query") String query,
+        @Param("marca") String marca,
+        @Param("supermercadoId") Long supermercadoId,
+        @Param("categoriaId") Long categoriaId,
+        Pageable pageable
+    );
+
+    @Query(value = "SELECT p FROM Producto p " +
+           "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
+           "AND (:supermercadoId IS NULL OR EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
+           ")) " +
+           "AND EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt2 JOIN HistorialPrecio hp ON hp.productoTienda.id = pt2.id WHERE pt2.producto.id = p.id" +
+           ") " +
+           "ORDER BY (SELECT MAX(hp.precio) FROM HistorialPrecio hp JOIN hp.productoTienda pt WHERE pt.producto.id = p.id) DESC",
+           countQuery = "SELECT COUNT(p) FROM Producto p " +
+           "WHERE (:query IS NULL OR :query = '' OR LOWER(p.nombreGenerico) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+           "       OR LOWER(p.marca) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+           "AND (:marca IS NULL OR :marca = '' OR LOWER(p.marca) = LOWER(CAST(:marca AS string))) " +
+           "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
+           "AND (:supermercadoId IS NULL OR EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt WHERE pt.producto.id = p.id AND pt.supermercado.id = :supermercadoId" +
+           ")) " +
+           "AND EXISTS (" +
+           "    SELECT 1 FROM ProductoTienda pt2 JOIN HistorialPrecio hp ON hp.productoTienda.id = pt2.id WHERE pt2.producto.id = p.id" +
+           ")")
+    Page<Producto> buscarProductosMaestrosPrecioDesc(
+        @Param("query") String query,
+        @Param("marca") String marca,
+        @Param("supermercadoId") Long supermercadoId,
+        @Param("categoriaId") Long categoriaId,
+        Pageable pageable
+    );
+
     /**
      * Recupera todos los productos cuyo nombre genérico coincida exactamente (case-insensitive)
      * con el término buscado. Usado por IngestaService para la búsqueda de similitud.
      */
     @Query("SELECT p FROM Producto p WHERE LOWER(p.nombreGenerico) = LOWER(CAST(:nombreGenerico AS string))")
     List<Producto> findAllByNombreGenericoIgnoreCase(@Param("nombreGenerico") String nombreGenerico);
+
+    /** Busca el producto maestro por código de barras (EAN/GTIN). */
+    Optional<Producto> findByEan(String ean);
+
+    /** Busca el producto maestro por su huella determinista dentro de una categoría. */
+    Optional<Producto> findByCategoriaIdAndClaveNormalizada(Long categoriaId, String claveNormalizada);
 
     /**
      * Verifica si ya existe un producto con los mismos atributos atómicos y categoría.

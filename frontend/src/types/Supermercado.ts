@@ -4,6 +4,15 @@ export interface Supermercado {
   urlBase?: string
 }
 
+export interface ProductoTiendaOferta {
+  productoId: number
+  supermercadoId: number
+  supermercadoNombre: string
+  precio: number
+  urlImagen?: string
+  urlEspecifica?: string
+}
+
 export interface ProductoBusqueda {
   id: number
   nombreGenerico: string
@@ -18,6 +27,7 @@ export interface ProductoBusqueda {
   pesoUnidad?: string
   varianteEspecifica?: string
   urlEspecifica?: string
+  tiendas?: ProductoTiendaOferta[]
 }
 
 export interface ApiResponse<T> {
@@ -41,6 +51,7 @@ export interface ItemLista {
   cantidad: number
   precioUnitario: number
   precioTotal: number
+  supermercadoId?: number
   supermercadoNombre: string
 }
 

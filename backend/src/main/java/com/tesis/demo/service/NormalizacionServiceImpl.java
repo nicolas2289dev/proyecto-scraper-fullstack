@@ -4,11 +4,17 @@ import com.tesis.demo.dto.ProductoNormalizadoDto;
 import com.tesis.demo.model.Producto;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Implementación del servicio de Normalización Inteligente.
@@ -17,9 +23,13 @@ import java.util.regex.Pattern;
  * "500g", "500 gr", "500 gramos", "x 500 Gr", "1kg", "1 kilo", "500ml",
  * "1 litro", "750cc" y los normaliza a (pesoValor, pesoUnidad).</p>
  *
- * <p><b>Algoritmo Jaro-Winkler</b>: Implementado en Java puro, sin dependencias
- * externas. Especialmente efectivo para errores tipográficos en nombres cortos
- * como marcas comerciales (ej: "Lucchetti" vs "Luchetti").</p>
+ * <p><b>Marca y variante</b>: se determinan por token, <i>sin depender del orden</i> de las
+ * palabras del título: primero la marca informada por la tienda, luego el diccionario de
+ * marcas conocidas. Lo que sobra (sin keyword, marca, peso ni conectores) es la variante.</p>
+ *
+ * <p><b>Huella ({@link #generarClave})</b>: criterio determinista de unificación entre tiendas.
+ * Jaro-Winkler se usa solo como tolerancia a errores tipográficos en la marca
+ * (ej: "Lucchetti" vs "Luchetti").</p>
  */
 @Service
 public class NormalizacionServiceImpl implements NormalizacionService {
@@ -28,6 +38,9 @@ public class NormalizacionServiceImpl implements NormalizacionService {
 
     /** Umbral de similitud por defecto para unificación de productos. */
     public static final double UMBRAL_DEFAULT = 0.92;
+
+    /** Largo máximo de la huella (columna clave_normalizada: 400). */
+    private static final int MAX_LARGO_CLAVE = 380;
 
     /**
      * Patrón Regex para extraer peso/volumen del texto crudo.
@@ -41,31 +54,70 @@ public class NormalizacionServiceImpl implements NormalizacionService {
             Pattern.CASE_INSENSITIVE
     );
 
+    /** Packs de unidades: "x 3 un", "X3 unidades". Diferencian al pack del producto individual. */
+    private static final Pattern PACK_PATTERN = Pattern.compile(
+            "\\bx\\s*(\\d+)\\s*(?:un|u|uni|unid|unidad|unidades)\\b\\.?",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("[\\p{L}\\p{N}]+");
+
+    /**
+     * Conectores y restos de unidades sin valor para identificar una variante.
+     * Se mantienen "con" y "sin" a propósito: "con sal" y "sin sal" son productos distintos.
+     */
+    private static final Set<String> STOPWORDS = Set.of(
+            "de", "del", "la", "el", "las", "los", "y", "e", "en", "por", "para", "al", "a", "x",
+            "sabor", "un", "u", "uni", "unid", "unidad", "unidades",
+            "g", "gr", "grs", "kg", "kgs", "ml", "cc", "l", "lt", "lts"
+    );
+
+    /** Token con su forma original (para mostrar) y su forma normalizada (para comparar). */
+    private record Token(String original, String norm) {}
+
     // ─── Normalización ───────────────────────────────────────────────────────
 
     @Override
     public ProductoNormalizadoDto normalizar(String textoCrudo, String palabraClave) {
+        return normalizar(textoCrudo, palabraClave, null, null, null, null);
+    }
+
+    @Override
+    public ProductoNormalizadoDto normalizar(String textoCrudo, String palabraClave, String marcaTienda,
+                                             Double pesoHint, String unidadHint,
+                                             Collection<String> marcasConocidas) {
+        String nombreGenerico = limpiarKeyword(palabraClave);
+        String marcaHint = marcaTienda == null || marcaTienda.isBlank() ? null : marcaTienda.trim();
+
         if (textoCrudo == null || textoCrudo.isBlank()) {
-            return new ProductoNormalizadoDto(limpiarKeyword(palabraClave), null, null, null, null);
+            return new ProductoNormalizadoDto(nombreGenerico,
+                    marcaHint == null ? null : capitalizarPalabras(marcaHint),
+                    null, pesoHint, pesoHint == null ? null : normalizarUnidad(unidadHint));
         }
 
-        String textoOriginal = textoCrudo.trim();
-
-        // 1. Pre-limpiar el texto crudo: eliminar elementos de UI que no son datos del producto
-        // Ej: "Disponible", "Agregar", precios con '$', porcentajes de descuento
-        String textoLimpio = textoOriginal
+        // 1. Pre-limpiar elementos de UI que no son datos del producto
+        // Ej: "Disponible", "Agregar", precios con '$', descuentos tipo "-20%" o "20% off"
+        String texto = textoCrudo.trim()
                 .replaceAll("(?i)\\b(disponible|agregar|no\\s+disponible|agotado|oferta|descuento)\\b", " ")
-                .replaceAll("\\$[\\s\\u00A0]*[\\d.,]+", " ")  // eliminar precios: "$ 823,99"
-                .replaceAll("-?\\d+%", " ")                   // eliminar descuentos: "-20%"
+                .replaceAll("\\$[\\s\\u00A0]*[\\d.,]+", " ")
+                .replaceAll("-\\d+%", " ")
+                .replaceAll("(?i)\\b\\d+%\\s*(off|dto|desc\\w*)", " ")
                 .replaceAll("\\s{2,}", " ")
                 .trim();
 
-        // 2. Extraer peso/volumen del texto limpio con regex
+        // 2. Packs de unidades ("x 3 un") → se tratan como variante
+        List<Token> variantePack = new ArrayList<>();
+        Matcher pack = PACK_PATTERN.matcher(texto);
+        if (pack.find()) {
+            variantePack.add(new Token("Pack", "pack"));
+            variantePack.add(new Token("x" + pack.group(1), "x" + pack.group(1)));
+            texto = (texto.substring(0, pack.start()) + " " + texto.substring(pack.end())).trim();
+        }
+
+        // 3. Peso/volumen con regex (con respaldo en el valor pre-parseado por el scraper)
         Double pesoValor = null;
         String pesoUnidad = null;
-        String textoSinPeso = textoLimpio;
-
-        Matcher matcher = PESO_PATTERN.matcher(textoLimpio);
+        Matcher matcher = PESO_PATTERN.matcher(texto);
         if (matcher.find()) {
             // El patrón tiene dos alternativas: grupos 1,2 para unidades no ambiguas y grupos 3,4 para 'l'
             String valorStr = matcher.group(1) != null ? matcher.group(1) : matcher.group(3);
@@ -78,33 +130,104 @@ public class NormalizacionServiceImpl implements NormalizacionService {
             if (unidadStr != null) {
                 pesoUnidad = normalizarUnidad(unidadStr);
             }
-            // Eliminar la parte del peso del texto para el procesamiento de marca/variante
-            textoSinPeso = (textoLimpio.substring(0, matcher.start()) +
-                            textoLimpio.substring(matcher.end())).trim();
+            texto = (texto.substring(0, matcher.start()) + " " + texto.substring(matcher.end())).trim();
+        }
+        if ((pesoValor == null || pesoUnidad == null) && pesoHint != null && unidadHint != null) {
+            pesoValor = pesoHint;
+            pesoUnidad = normalizarUnidad(unidadHint);
         }
 
-        // 2. Determinar nombre genérico (la palabraClave)
-        String nombreGenerico = limpiarKeyword(palabraClave);
+        // 4. Tokenizar y quitar la palabra clave (singular/plural, también multi-palabra)
+        List<Token> tokens = tokenizar(texto);
+        quitarSecuencia(tokens, tokenizar(nombreGenerico), true);
 
-        // 3. Eliminar la palabraClave del texto para aislar marca y variante
-        // Se hace sobre el texto sin peso y sin la keyword (insensitive)
-        String textoRestante = textoSinPeso
-                .replaceAll("(?i)\\b" + Pattern.quote(nombreGenerico) + "s?\\b", "")
-                .replaceAll("\\s{2,}", " ")
-                .trim();
+        // 5. Marca: informada por la tienda → diccionario → desconocida (null)
+        String marca = null;
+        if (marcaHint != null) {
+            marca = capitalizarPalabras(marcaHint);
+            quitarSecuencia(tokens, tokenizar(marcaHint), false);
+        } else if (marcasConocidas != null) {
+            List<String> ordenadas = marcasConocidas.stream()
+                    .filter(m -> m != null && !m.isBlank())
+                    .sorted(Comparator
+                            .comparingInt((String m) -> tokenizar(m).size()).reversed()
+                            .thenComparing(Comparator.comparingInt(String::length).reversed()))
+                    .toList();
+            for (String candidata : ordenadas) {
+                if (quitarSecuencia(tokens, tokenizar(candidata), false)) {
+                    marca = capitalizarPalabras(candidata);
+                    break;
+                }
+            }
+        }
 
-        // 4. Extraer marca y variante del texto restante
-        String[] partes = extraerMarcaYVariante(textoRestante, nombreGenerico);
-        String marca = partes[0];
-        String variante = partes[1];
+        // 6. Variante: tokens restantes sin conectores, en el orden original del título (deduplicando tokens contiguos)
+        List<Token> varianteTokens = new ArrayList<>();
+        Token prevToken = null;
+        for (Token t : tokens) {
+            if (!STOPWORDS.contains(t.norm())) {
+                if (prevToken == null || !prevToken.norm().equals(t.norm())) {
+                    varianteTokens.add(t);
+                    prevToken = t;
+                }
+            }
+        }
+        varianteTokens.addAll(variantePack);
+        String variante = varianteTokens.stream().map(Token::original).collect(Collectors.joining(" "));
 
         return new ProductoNormalizadoDto(
                 nombreGenerico,
-                marca.isEmpty() ? null : capitalizarPalabras(marca),
-                variante.isEmpty() ? null : capitalizarPalabras(variante),
+                marca,
+                variante.isBlank() ? null : capitalizarPalabras(variante),
                 pesoValor,
                 pesoUnidad
         );
+    }
+
+    // ─── Huella determinista ─────────────────────────────────────────────────
+
+    @Override
+    public String generarClave(String nombreGenerico, String marca, String varianteEspecifica,
+                               Double pesoValor, String pesoUnidad) {
+        String clave = String.join("|",
+                unirNormalizado(nombreGenerico, "_"),
+                unirNormalizado(marca, "_"),
+                pesoCanonico(pesoValor, pesoUnidad),
+                claveVariante(varianteEspecifica));
+        return clave.length() > MAX_LARGO_CLAVE ? clave.substring(0, MAX_LARGO_CLAVE) : clave;
+    }
+
+    /** Tokens de variante sin conectores, deduplicados y ordenados: independiente del orden del título. */
+    private String claveVariante(String variante) {
+        if (variante == null || variante.isBlank()) return "";
+        Set<String> ordenados = new TreeSet<>();
+        for (Token t : tokenizar(variante)) {
+            if (!STOPWORDS.contains(t.norm())) ordenados.add(t.norm());
+        }
+        return String.join("-", ordenados);
+    }
+
+    private String unirNormalizado(String valor, String separador) {
+        if (valor == null || valor.isBlank()) return "";
+        return tokenizar(valor).stream().map(Token::norm).collect(Collectors.joining(separador));
+    }
+
+    /**
+     * Peso en unidad base (kg→g, l→ml) sin ceros sobrantes, p. ej. "1 kg" y "1000 g" → "1000g".
+     * Cadena vacía si no hay peso.
+     */
+    private String pesoCanonico(Double valor, String unidad) {
+        if (valor == null || unidad == null || unidad.isBlank()) return "";
+        String u = normalizarUnidad(unidad);
+        BigDecimal v = BigDecimal.valueOf(valor);
+        if ("kg".equals(u)) {
+            v = v.multiply(BigDecimal.valueOf(1000));
+            u = "g";
+        } else if ("l".equals(u)) {
+            v = v.multiply(BigDecimal.valueOf(1000));
+            u = "ml";
+        }
+        return v.stripTrailingZeros().toPlainString() + u;
     }
 
     // ─── Jaro-Winkler (implementación pura Java) ─────────────────────────────
@@ -140,27 +263,23 @@ public class NormalizacionServiceImpl implements NormalizacionService {
 
     @Override
     public boolean esSimilar(Producto candidato, ProductoNormalizadoDto normalizado, double umbral) {
-        // Comparación de peso: si ambos tienen peso, deben coincidir exactamente
-        if (candidato.getPesoValor() != null && normalizado.getPesoValor() != null) {
-            if (!candidato.getPesoValor().equals(normalizado.getPesoValor())) return false;
-        }
-        if (candidato.getPesoUnidad() != null && normalizado.getPesoUnidad() != null) {
-            if (!candidato.getPesoUnidad().equalsIgnoreCase(normalizado.getPesoUnidad())) return false;
+        // Peso canónico: debe ser idéntico (1 kg == 1000 g; ausencia solo equivale a ausencia)
+        String pesoCandidato = pesoCanonico(candidato.getPesoValor(), candidato.getPesoUnidad());
+        String pesoNuevo = pesoCanonico(normalizado.getPesoValor(), normalizado.getPesoUnidad());
+        if (!pesoCandidato.equals(pesoNuevo)) return false;
+
+        // Variante: mismos tokens sin importar el orden
+        if (!claveVariante(candidato.getVarianteEspecifica())
+                .equals(claveVariante(normalizado.getVarianteEspecifica()))) {
+            return false;
         }
 
-        // Similitud de marca
-        double simMarca = jaroWinklerSimilarity(
-                candidato.getMarca(),
-                normalizado.getMarca()
-        );
-        if (simMarca < umbral) return false;
-
-        // Similitud de variante específica
-        double simVariante = jaroWinklerSimilarity(
-                candidato.getVarianteEspecifica(),
-                normalizado.getVarianteEspecifica()
-        );
-        return simVariante >= umbral;
+        // Marca: ambas ausentes, o similares (tolera errores tipográficos)
+        boolean candidatoSinMarca = candidato.getMarca() == null || candidato.getMarca().isBlank();
+        boolean nuevoSinMarca = normalizado.getMarca() == null || normalizado.getMarca().isBlank();
+        if (candidatoSinMarca && nuevoSinMarca) return true;
+        if (candidatoSinMarca || nuevoSinMarca) return false;
+        return jaroWinklerSimilarity(candidato.getMarca(), normalizado.getMarca()) >= umbral;
     }
 
     @Override
@@ -183,7 +302,7 @@ public class NormalizacionServiceImpl implements NormalizacionService {
 
         // Flexibilidad para chocolatadas (aceptar "chocolate" + "leche" / "bebida" / "bda")
         if (palabraNorm.equals("chocolatada") && !contieneClave) {
-            contieneClave = textoNorm.contains("chocolate") && 
+            contieneClave = textoNorm.contains("chocolate") &&
                     (textoNorm.contains("leche") || textoNorm.contains("bebida") || textoNorm.contains("bda"));
         }
 
@@ -193,8 +312,8 @@ public class NormalizacionServiceImpl implements NormalizacionService {
 
         // Filtro Negativo: Exclusiones específicas
         if (singularClave.equals("sardina")) {
-            if (textoNorm.contains("atun") || textoNorm.contains("caballa") || 
-                textoNorm.contains("anchoa") || textoNorm.contains("anchoita") || 
+            if (textoNorm.contains("atun") || textoNorm.contains("caballa") ||
+                textoNorm.contains("anchoa") || textoNorm.contains("anchoita") ||
                 textoNorm.contains("jurel") || textoNorm.contains("mejillon")) {
                 return false;
             }
@@ -211,6 +330,60 @@ public class NormalizacionServiceImpl implements NormalizacionService {
 
 
     // ─── Helpers privados ────────────────────────────────────────────────────
+
+    /** Tokeniza conservando la forma original (para mostrar) y la normalizada (para comparar). */
+    private List<Token> tokenizar(String texto) {
+        List<Token> tokens = new ArrayList<>();
+        if (texto == null) return tokens;
+        Matcher m = TOKEN_PATTERN.matcher(texto);
+        while (m.find()) {
+            String original = m.group();
+            tokens.add(new Token(original, sinAcentos(original.toLowerCase())));
+        }
+        return tokens;
+    }
+
+    /**
+     * Elimina de {@code tokens} la primera aparición (o todas, si {@code todas}) de la
+     * secuencia {@code patron}. Cuando {@code tolerarPlural} es true, compara por raíz
+     * ("picadillo" == "picadillos"). Devuelve true si eliminó algo.
+     */
+    private boolean quitarSecuencia(List<Token> tokens, List<Token> patron, boolean tolerarPlural) {
+        if (patron.isEmpty() || tokens.size() < patron.size()) return false;
+        boolean eliminado = false;
+        int i = 0;
+        while (i <= tokens.size() - patron.size()) {
+            boolean coincide = true;
+            for (int j = 0; j < patron.size(); j++) {
+                String a = tokens.get(i + j).norm();
+                String b = patron.get(j).norm();
+                if (!(tolerarPlural ? raiz(a).equals(raiz(b)) : a.equals(b))) {
+                    coincide = false;
+                    break;
+                }
+            }
+            if (coincide) {
+                for (int j = 0; j < patron.size(); j++) tokens.remove(i);
+                eliminado = true;
+                if (!tolerarPlural) return true; // marca: solo una aparición
+            } else {
+                i++;
+            }
+        }
+        return eliminado;
+    }
+
+    /** Raíz simple para tolerar plurales: "picadillos" → "picadillo", "panes" → "pan". */
+    private String raiz(String palabra) {
+        if (palabra.length() > 4 && palabra.endsWith("es")) return palabra.substring(0, palabra.length() - 2);
+        if (palabra.length() > 3 && palabra.endsWith("s")) return palabra.substring(0, palabra.length() - 1);
+        return palabra;
+    }
+
+    private String sinAcentos(String input) {
+        return Normalizer.normalize(input, Normalizer.Form.NFD)
+                .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+    }
 
     /**
      * Calcula la distancia de Jaro entre dos strings normalizados.
@@ -273,7 +446,7 @@ public class NormalizacionServiceImpl implements NormalizacionService {
         if (u.matches("g|gr|grs|gramos?")) return "g";
         if (u.matches("kg|kgs|kilos?|kilogramos?")) return "kg";
         if (u.matches("ml|cc")) return "ml";
-        if (u.matches("l|lt|litros?")) return "l";
+        if (u.matches("l|lt|lts|litros?")) return "l";
         return u;
     }
 
@@ -320,61 +493,11 @@ public class NormalizacionServiceImpl implements NormalizacionService {
     }
 
     /**
-     * Heurística para separar marca y variante del texto restante.
-     * La primera "palabra token" se asume marca; el resto se asume variante.
-     * Las marcas típicas son palabras cortas o compuestas conocidas.
-     */
-    private String[] extraerMarcaYVariante(String textoRestante, String nombreGenerico) {
-        if (textoRestante == null || textoRestante.isBlank()) {
-            return new String[]{"", ""};
-        }
-
-        // Tokenizar eliminando conectores comunes en español
-        String limpio = textoRestante
-                .replaceAll("(?i)\\b(de|del|la|el|las|los|por|para|con|sin|kg|g|ml|l)\\b", " ")
-                .replaceAll("[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9\\s]", " ")
-                .replaceAll("\\s{2,}", " ")
-                .trim();
-
-        String[] tokens = limpio.split("\\s+");
-        List<String> marcaTokens = new ArrayList<>();
-        List<String> varianteTokens = new ArrayList<>();
-
-        // Heurística: primer token capitalizado que no sea la keyword → marca
-        // El resto → variante
-        boolean marcaEncontrada = false;
-        for (String token : tokens) {
-            if (token.isBlank()) continue;
-            if (!marcaEncontrada &&
-                Character.isUpperCase(token.charAt(0)) &&
-                !token.equalsIgnoreCase(nombreGenerico)) {
-                marcaTokens.add(token);
-                marcaEncontrada = true;
-            } else if (marcaEncontrada) {
-                varianteTokens.add(token);
-            }
-        }
-
-        // Si no se encontró marca por mayúsculas, tomar primer token como marca
-        if (marcaTokens.isEmpty() && tokens.length > 0) {
-            marcaTokens.add(tokens[0]);
-            for (int i = 1; i < tokens.length; i++) {
-                if (!tokens[i].isBlank()) varianteTokens.add(tokens[i]);
-            }
-        }
-
-        return new String[]{
-                String.join(" ", marcaTokens),
-                String.join(" ", varianteTokens)
-        };
-    }
-
-    /**
      * Capitaliza la primera letra de cada palabra.
      */
     private String capitalizarPalabras(String input) {
         if (input == null || input.isBlank()) return input;
-        String[] words = input.split("\\s+");
+        String[] words = input.trim().split("\\s+");
         StringBuilder sb = new StringBuilder();
         for (String word : words) {
             if (!word.isEmpty()) {

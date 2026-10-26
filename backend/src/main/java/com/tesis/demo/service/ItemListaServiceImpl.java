@@ -2,12 +2,16 @@ package com.tesis.demo.service;
 
 import com.tesis.demo.dto.ItemListaCreateDto;
 import com.tesis.demo.dto.ItemListaDto;
+import com.tesis.demo.exception.ConflictException;
+import com.tesis.demo.exception.ResourceNotFoundException;
 import com.tesis.demo.model.ItemLista;
 import com.tesis.demo.model.ListaCompra;
 import com.tesis.demo.model.Producto;
+import com.tesis.demo.model.Supermercado;
 import com.tesis.demo.repository.ItemListaRepository;
 import com.tesis.demo.repository.ListaCompraRepository;
 import com.tesis.demo.repository.ProductoRepository;
+import com.tesis.demo.repository.SupermercadoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,23 +26,30 @@ public class ItemListaServiceImpl implements ItemListaService {
     private final ItemListaRepository itemListaRepository;
     private final ListaCompraRepository listaCompraRepository;
     private final ProductoRepository productoRepository;
+    private final SupermercadoRepository supermercadoRepository;
 
     @Override
     @Transactional
     public ItemListaDto agregarItem(Long listaId, String userEmail, ItemListaCreateDto dto) {
         ListaCompra lista = getListaAndCheckOwner(listaId, userEmail);
 
-        itemListaRepository.findByListaCompraIdAndProductoId(listaId, dto.getProductoId())
-                .ifPresent(existing -> {
-                    throw new RuntimeException("Ese producto ya existe en la lista");
-                });
+        boolean existeEnLaLista = itemListaRepository.existsByListaCompraIdAndProductoId(listaId, dto.getProductoId());
+        if(existeEnLaLista) {
+            throw new ConflictException("El producto ya existe en la lista");
+        }
 
         Producto producto = productoRepository.findById(dto.getProductoId())
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
         ItemLista itemLista = new ItemLista();
         itemLista.setListaCompra(lista);
         itemLista.setProducto(producto);
+        // Supermercado seleccionado asociado si fue elegido
+        if (dto.getSupermercadoId() != null) {
+            Supermercado supermercado = supermercadoRepository.findById(dto.getSupermercadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Supermercado no encontrado"));
+            itemLista.setSupermercado(supermercado);
+        }
         itemLista.setCantidad(dto.getCantidad());
 
         return mapToDto(itemListaRepository.save(itemLista));
@@ -82,6 +93,11 @@ public class ItemListaServiceImpl implements ItemListaService {
 
         itemLista.setProducto(producto);
         itemLista.setCantidad(dto.getCantidad());
+        if (dto.getSupermercadoId() != null) {
+            Supermercado supermercado = supermercadoRepository.findById(dto.getSupermercadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Supermercado no encontrado"));
+            itemLista.setSupermercado(supermercado);
+        }
 
         return mapToDto(itemListaRepository.save(itemLista));
     }
@@ -115,7 +131,9 @@ public class ItemListaServiceImpl implements ItemListaService {
                 itemLista.getProducto().getId(),
                 itemLista.getProducto().getNombreGenerico(),
                 itemLista.getProducto().getMarca(),
-                itemLista.getCantidad()
+                itemLista.getCantidad(),
+                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getId() : null,
+                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getNombre() : null
         );
     }
 }

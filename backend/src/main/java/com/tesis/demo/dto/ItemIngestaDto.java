@@ -58,4 +58,22 @@ public class ItemIngestaDto {
      * Puede ser null si el scraper no encontró imagen.
      */
     private String urlImagen;
+
+    /**
+     * Código de barras EAN/GTIN informado por la tienda. Opcional pero es el criterio
+     * de unificación más fiable entre supermercados.
+     */
+    private String ean;
+
+    /**
+     * Marca informada por la tienda (ej: campo {@code brand} de VTEX). Opcional.
+     * Evita inferir la marca desde el orden de las palabras del título.
+     */
+    private String marcaTienda;
+
+    /** Peso/volumen pre-parseado por el scraper. Se usa solo si el backend no logra extraerlo del título. */
+    private Double pesoValor;
+
+    /** Unidad del peso/volumen pre-parseado por el scraper (g, kg, ml, l). */
+    private String pesoUnidad;
 }

@@ -13,6 +13,7 @@ public interface ProductoService {
     ProductoDto obtenerPorId(Long id);
     Page<ProductoDto> buscar(String nombre, String marca, Long categoriaId, Pageable pageable);
     Page<ProductoBusquedaDto> buscarConPrecios(String query, String marca, Long supermercadoId, Pageable pageable);
+    Page<ProductoBusquedaDto> buscarConPrecios(String query, String marca, Long supermercadoId, Long categoriaId, Pageable pageable);
     List<String> obtenerMarcasDisponibles(String query, Long supermercadoId);
     ProductoDto actualizar(Long id, ProductoDto dto);
     void eliminar(Long id);

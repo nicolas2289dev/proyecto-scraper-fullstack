@@ -9,6 +9,8 @@ public class ItemListaCreateDto {
     @NotNull(message = "El producto es obligatorio")
     private Long productoId;
 
+    private Long supermercadoId;
+
     @NotNull(message = "La cantidad es obligatoria")
     @Min(value = 1, message = "La cantidad debe ser mayor o igual a 1")
     private Integer cantidad;

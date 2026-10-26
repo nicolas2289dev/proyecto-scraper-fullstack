@@ -102,4 +102,14 @@ public class ExtractorController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Ingesta masiva procesada exitosamente.", resultado));
     }
+
+    /**
+     * Endpoint administrativo para reiniciar el catálogo antes de una nueva ingesta completa.
+     * Elimina historial_precios, items_lista, productos_tienda, productos y marcas.
+     */
+    @PostMapping("/reiniciar-catalogo")
+    public ResponseEntity<ApiResponse<Void>> reiniciarCatalogo() {
+        ingestaService.reiniciarCatalogo();
+        return ResponseEntity.ok(ApiResponse.success("Catálogo reiniciado exitosamente. Listo para re-ingesta.", null));
+    }
 }

@@ -12,6 +12,7 @@ public interface ItemListaRepository extends JpaRepository<ItemLista, Long> {
     List<ItemLista> findByListaCompraIdOrderByIdAsc(Long listaId);
     Optional<ItemLista> findByIdAndListaCompraId(Long id, Long listaId);
     Optional<ItemLista> findByListaCompraIdAndProductoId(Long listaId, Long productoId);
+    boolean existsByListaCompraIdAndProductoId(Long listaId, Long productoId);
     void deleteByListaCompraId(Long listaId);
     void deleteByProductoId(Long productoId);
 }

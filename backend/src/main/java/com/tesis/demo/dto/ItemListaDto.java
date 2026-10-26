@@ -14,4 +14,6 @@ public class ItemListaDto {
     private String productoNombre;
     private String marca;
     private Integer cantidad;
+    private Long supermercadoId;
+    private String supermercadoNombre;
 }

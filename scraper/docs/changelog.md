@@ -2,6 +2,24 @@
 
 Historial de control de cambios del desarrollo del scraper. Organizado de forma cronológica e incremental por sprints de trabajo académico.
 
+## [2.2.0] - 2026-10-11
+
+### Añadido: Integración con API de Catálogo VTEX, Extracción de EAN y Marca Estructurada
+*   **Módulo `vtex_api.py` (`src/utils/vtex_api.py`)**:
+    *   Nuevo cliente para la API pública de catálogo de VTEX (`/api/catalog_system/pub/products/search?ft={keyword}`).
+    *   Extrae datos de primera fuente: código de barras universal `ean`, marca oficial `brand`, precio de oferta activo y disponibilidad en stock.
+    *   **Filtro estricto de disponibilidad (`only_available=True`)**: la API de catálogo de VTEX indexa productos descatalogados o sin stock que conservan precios históricos obsoletos. Se filtran automáticamente para que el resultado coincida exactamente con la vitrina pública del buscador oficial (ej. Vea pasa de 17 resultados históricos a exactamente 2 productos activos en góndola).
+    *   Evita parsing frágil del DOM y resuelve la desambiguación de marcas comerciales entre tiendas.
+*   **`BaseScraper._extract_via_vtex_api` (`src/base_scraper.py`)**:
+    *   Implementada estrategia API-First en `extract_all_products_from_search`: intenta primero consumir la API de catálogo de la tienda mediante `page.request` (aprovechando la sesión y headers del navegador).
+    *   Si la API responde con productos estructurados, se utilizan directamente; si la tienda no expone la API o falla la conexión, se aplica un fallback transparente al scraping del DOM existente.
+*   **Normalización y Limpieza de Títulos (`src/utils/normalizers.py`)**:
+    *   Añadida función `clean_title` para eliminar ruidos de interfaz ("Disponible", "Agregar", precios en `$`, porcentajes de descuento) antes de armar el payload.
+*   **Payload Enriquecido de Ingesta Masiva (`src/main.py`)**:
+    *   `discovery_mode_run` envía ahora los campos estructurados `ean`, `marcaTienda`, `pesoValor`, `pesoUnidad` y `disponibilidad` en `ItemIngestaDto`, omitiendo productos no disponibles o con precio inválido.
+*   **Batería de Pruebas Unitarias (`tests/`)**:
+    *   Añadidos 18 tests unitarios en `test_vtex_api.py` y `test_normalizers.py` cubriendo casos reales de Comodín, Día y Vea, incluyendo el filtrado de productos sin stock.
+
 ---
 
 ## [2.1.1] - 2026-07-12

@@ -95,8 +95,14 @@
   - Seguridad: público (permitAll)
 - GET /api/v1/productos/busqueda
   - Descripción: Busca productos por nombre o marca y devuelve los resultados combinados con su último precio y supermercado.
-  - Query Params: q (término de búsqueda), supermercadoId (opcional), page, size, sort
+  - Query Params: q (término de búsqueda), supermercadoId (opcional), marca (opcional), page, size, sort
   - Response: ApiResponse<Page<ProductoBusquedaDto>>
+  - Seguridad: público (permitAll)
+- GET /api/v1/productos/busqueda/marcas
+  - Descripción: Devuelve una lista de marcas disponibles para los productos, filtrando por término de búsqueda y supermercado.
+  - Query Params: q (término de búsqueda), supermercadoId (opcional)
+  - Response: ApiResponse<List<String>>
+  - Controlador: ProductoController
   - Seguridad: público (permitAll)
 - GET /api/v1/productos/{id}
   - Descripción: Obtiene un producto maestro específico por su ID.
@@ -367,8 +373,14 @@ Endpoints exclusivos para el bot de scraping. Requieren ROLE_ADMIN o ROLE_ADMINI
   - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
 
 - POST /api/v1/extractor/ingesta-masiva
-  - Descripción: Recibe la lista de productos descubiertos en la grilla de resultados del supermercado. Ejecuta el pipeline: normalización (Regex + Jaro-Winkler) → deduplicación → inserción en catálogo maestro → registro de precios.
-  - Request: List<ItemIngestaDto> donde cada ítem tiene: { textoCrudoTienda, urlEspecifica, precioActual, disponibilidad, supermercadoId, palabraClaveBuscada, urlImagen }
+  - Descripción: Recibe la lista de productos descubiertos en la grilla de resultados del supermercado. Ejecuta el pipeline: normalización determinista por tokens independiente del orden → deduplicación por EAN/huella única/similitud → inserción o unificación en catálogo maestro → mapeo de oferta en ProductoTienda → registro de precios.
+  - Request: List<ItemIngestaDto> donde cada ítem tiene: { textoCrudoTienda, urlEspecifica, precioActual, disponibilidad, supermercadoId, palabraClaveBuscada, urlImagen, ean, marcaTienda, pesoValor, pesoUnidad }
   - Response: ApiResponse<IngestaResultadoDto> con: { procesados, nuevosProductos, productosUnificados, preciosRegistrados, errores }
+  - Controlador: ExtractorController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR
+
+- POST /api/v1/extractor/reiniciar-catalogo
+  - Descripción: Limpia por completo el catálogo maestro (historial de precios, items de lista, ofertas por tienda, productos y marcas) para permitir reiniciar la base de datos y realizar una ingesta limpia desde cero.
+  - Response: ApiResponse<Void>
   - Controlador: ExtractorController
   - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR

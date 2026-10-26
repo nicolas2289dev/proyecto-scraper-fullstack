@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "productos")
+@Table(name = "productos", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_productos_ean", columnNames = "ean"),
+        @UniqueConstraint(name = "uk_productos_categoria_clave", columnNames = {"categoria_id", "clave_normalizada"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -53,4 +56,18 @@ public class Producto {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
+
+    /**
+     * Código de barras (EAN/GTIN) del producto físico. Es idéntico entre supermercados,
+     * por lo que es el criterio de unificación más fiable. Puede ser null.
+     */
+    @Column(length = 20)
+    private String ean;
+
+    /**
+     * Huella determinista del producto (nombre, marca, peso canónico y variante ordenada).
+     * Se usa para unificar productos cuando no hay EAN. Puede ser null en productos manuales.
+     */
+    @Column(name = "clave_normalizada", length = 400)
+    private String claveNormalizada;
 }
