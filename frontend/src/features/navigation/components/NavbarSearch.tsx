@@ -8,7 +8,7 @@ interface NavbarSearchProps {
 }
 
 export const NavbarSearch: React.FC<NavbarSearchProps> = ({
-  placeholder = 'Buscar productos... (ej: leche, arroz, aceite)',
+  placeholder = 'Buscar por producto o marca... (ej: arroz, aceite)',
   className = '',
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();

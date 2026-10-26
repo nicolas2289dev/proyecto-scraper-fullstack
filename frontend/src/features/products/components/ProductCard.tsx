@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ProductoBusqueda } from '../types/products.types';
 import { formatNombreCompleto } from '../utils/formatters';
+import { getSupermarketLogo } from '../utils/supermarketLogos';
 
 interface ProductCardCompactProps {
   mode: 'compacta';
@@ -68,11 +69,21 @@ export const ProductCard: React.FC<ProductCardProps> = (props) => {
               {cantTiendas === 1 ? 'supermercado' : 'supermercados'}:
             </span>
             <div className="product-stores-badges">
-              {tiendas.map((t, idx) => (
-                <span key={t.supermercadoId || idx} className="store-badge">
-                  {t.supermercadoNombre}
-                </span>
-              ))}
+              {tiendas.map((t, idx) => {
+                const logo = getSupermarketLogo(t.supermercadoNombre);
+                return (
+                  <span key={t.supermercadoId || idx} className="store-badge">
+                    {logo && (
+                      <img
+                        src={logo.logoUrl}
+                        alt={logo.alt}
+                        className="store-badge-mini-logo"
+                      />
+                    )}
+                    <span>{t.supermercadoNombre}</span>
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -92,6 +103,8 @@ export const ProductCard: React.FC<ProductCardProps> = (props) => {
 
   // Vista Clásica
   const { product, store, onAdd } = props;
+  const storeLogo = getSupermarketLogo(store.supermercadoNombre);
+
   return (
     <div className="product-card">
       <div className="product-image-container">
@@ -112,7 +125,20 @@ export const ProductCard: React.FC<ProductCardProps> = (props) => {
             }
           }}
         />
-        <span className="product-super-badge">{store.supermercadoNombre}</span>
+        {storeLogo ? (
+          <div
+            className="product-super-badge product-super-badge-logo"
+            title={`Supermercado ${store.supermercadoNombre}`}
+          >
+            <img
+              src={storeLogo.logoUrl}
+              alt={storeLogo.alt}
+              className="product-super-logo"
+            />
+          </div>
+        ) : (
+          <span className="product-super-badge">{store.supermercadoNombre}</span>
+        )}
       </div>
       <div className="product-info">
         <div className="product-header">
