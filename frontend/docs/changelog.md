@@ -1,5 +1,48 @@
 # Changelog Frontend
 
+## [v3.4] - Hero Banner Superior de Ofertas & Ahorro
+- **Nuevo Componente HeroBanner (`src/features/products/components/HeroBanner.tsx`):**
+  - Incorporado en la cabecera de la columna principal del catálogo (`.catalog-main-column`), alineado armónicamente con el sidebar de filtros.
+  - Badge píldora `✨ AHORRÁ EN TUS COMPRAS` con gradiente esmeralda y soporte de temas.
+  - Título principal `"Compará precios en los principales supermercados"` y subtítulo explicativo de ahorro de tiempo y dinero.
+  - Fila de logotipos de las cadenas integradas (Comodín, Día y Vea) en chips blancos destacados con sombra y micro-interacciones hover.
+  - Gráfica recortada de alta definición de bolsa de compras con alimentos frescos (`/images/hero-groceries.png`) con transparencia alfa perfecta, sin rebordes ni cajas blancas residuales.
+- **Estilos Desacoplados y Responsivos (`src/features/products/styles/hero-banner.css`):**
+  - Soporte completo para Modo Claro (gradiente menta/verde suave) y Modo Oscuro (gradiente esmeralda/pizarra con iluminación interior).
+  - Breakpoints responsivos para desktop, tablets (< 960px) y móviles (< 680px) con reorganización vertical limpia.
+- **Reemplazo de Cabecera Legacy en `HomePage.tsx`:**
+  - Retiro definitivo del antiguo bloque `.home-header` de fondo oscuro y ajuste del padding superior del catálogo a `1.75rem`.
+  - Exportación del componente desde `src/features/products/index.ts`.
+
+## [v3.3] - Desacoplamiento de HomePage (Clean Architecture, Custom Hooks y Grilla Modular)
+- **Eliminación de God Component en `HomePage.tsx`:**
+  - Reducción drástica del archivo de más de 620 líneas a un orquestador declarativo y conciso de ~180 líneas, enfocado exclusivamente en layout y composición.
+  - Creación del hook `useProductCatalog` (`src/features/products/hooks/useProductCatalog.ts`) para encapsular estados de filtros, búsqueda con debounce, llamadas a `productoApi`, paginación y cálculos derivados en memoria (`filteredProducts`, `activeFiltersCount`).
+  - Creación del hook `useAddToList` (`src/features/products/hooks/useAddToList.ts`) para aislar la lógica de autenticación, modales de adición a listas de compra, selección de tienda/cantidad y feedback de errores/alertas.
+  - Creación del componente de presentación `ProductCatalogGrid` (`src/features/products/components/ProductCatalogGrid.tsx`) para aislar el renderizado de tarjetas en modo compacto vs clásico (expansión de tiendas), skeletons de carga y estado vacío.
+- **Ajuste Elástico de Altura del Sidebar:**
+  - Configurado `height: fit-content;` con `align-items: flex-start` en `.catalog-layout`, logrando que el sidebar abrace y ajuste su altura dinámicamente cuando los acordeones se contraen o expanden sin dejar espacios en blanco sobrantes.
+
+## [v3.2] - Nuevo Sidebar de Filtros Moderno & Drawer Móvil
+- **Sidebar de Filtros Sticky con Acordeones:**
+  - Rediseño modular con subcomponentes: `CategoryFilterSection`, `BrandFilterSection`, `PriceSortFilterSection`, `SupermarketFilterSection` y `DiscountFilterSection`.
+  - Acordeones colapsables independientes con animaciones fluidas y persistencia visual.
+  - Búsqueda de marcas en tiempo real con debounce integrado en el acordeón de marcas.
+  - Filtro por rango de precio (mínimo y máximo) y ordenamiento por precio ('Por defecto', 'Menor a mayor', 'Mayor a menor').
+- **Drawer Móvil y Tablet (< 1024px):**
+  - Implementación del componente `FilterDrawer` que abre un sheet lateral deslizante mediante botón flotante con badge de filtros activos.
+  - Bloqueo de scroll en `body` cuando el drawer está abierto y cierre mediante botón o click en overlay.
+
+## [v3.1] - Rediseño del Navbar, Atajos Rápidos y Modales de Información de Supermercados
+- **Búsqueda Central en Navbar:**
+  - Input de búsqueda global desacoplado (`NavbarSearch.tsx`) con debounce de 350ms sincronizado con la URL (`?q=...`) y la página de catálogo.
+- **Logos de Supermercados y Modales Informativos:**
+  - Atajos rápidos a supermercados con logos oficiales en SVG (`CartBrandIcon.tsx`).
+  - Modal informativo modal (`SupermarketInfoModal.tsx`) con información de sucursales, horarios y enlaces oficiales.
+- **Menú de Usuario y Tema:**
+  - Menú desplegable flotante de usuario (`UserDropdownMenu.tsx`) con opciones de perfil, mis listas, panel de administración y cierre de sesión.
+  - Switch de tema claro/oscuro con iconos animados y persistencia en `localStorage`.
+
 ## [v3.0] - Refactorización Integral a Arquitectura Feature-Based y Desacoplamiento de Estilos CSS
 - **Arquitectura Feature-Based (`src/app/`, `src/features/`, `src/shared/`)**:
   - **`src/app/`**: Enrutador central (`AppRoutes.tsx`), layout principal (`MainLayout.tsx`), layout styles (`mainLayout.css`), guardias de ruta (`ProtectedRoute.tsx`, `AdminRoute.tsx`) y provider demo (`DemoAutoLogin.tsx`).

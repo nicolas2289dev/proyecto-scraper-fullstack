@@ -139,9 +139,7 @@
 }
 
 .hero-store-pill:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  border-color: rgba(16, 185, 129, 0.3);
 }
 
 [data-theme="dark"] .hero-store-pill {
@@ -151,7 +149,6 @@
 }
 
 [data-theme="dark"] .hero-store-pill:hover {
-  border-color: rgba(52, 211, 153, 0.8);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
 }
 

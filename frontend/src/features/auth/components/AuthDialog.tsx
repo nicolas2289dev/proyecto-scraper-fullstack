@@ -116,7 +116,7 @@ export function AuthDialog() {
       role="dialog"
       aria-modal="true"
     >
-      <div className="p-dialog-dark-wrapper w-full max-w-[440px] bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 text-slate-100">
+      <div className="p-dialog-dark-wrapper w-full max-w-[440px] rounded-2xl overflow-hidden p-6">
         {/* Encabezado con Título y Botón Cerrar */}
         <div className="p-dialog-dark-header">
           <h2 className="p-dialog-dark-title">
@@ -135,7 +135,7 @@ export function AuthDialog() {
         {/* Sección de Contexto con Avatar */}
         <div className="p-dialog-dark-profile">
           <div className="p-dialog-dark-avatar">
-            {isLogin ? <User className="w-5 h-5 text-sky-400" /> : <UserPlus className="w-5 h-5 text-sky-400" />}
+            {isLogin ? <User className="w-5 h-5 text-white" /> : <UserPlus className="w-5 h-5 text-white" />}
           </div>
           <div className="p-dialog-dark-profile-info">
             <span className="p-dialog-dark-profile-name">

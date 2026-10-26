@@ -29,9 +29,10 @@ Cuenta con inyección dinámica de token y logout mediante `setApiAuthHandlers` 
 - `POST /auth/login`: Autenticación con email y contraseña, devuelve JWT y datos del usuario.
 - `POST /usuarios`: Registro de nuevo usuario en el sistema.
 
-#### Productos y Supermercados (`src/features/products/api/`)
-- `GET /productos/busqueda`: Búsqueda paginada y filtrada (`q`, `supermercadoId`, `marca`, `sort`, `page`, `size`).
+#### Productos, Categorías y Supermercados (`src/features/products/api/`)
+- `GET /productos/busqueda`: Búsqueda paginada y filtrada (`q`, `supermercadoId`, `marca`, `categoriaId`, `sort`, `page`, `size`).
 - `GET /productos/busqueda/marcas`: Lista de marcas disponibles para los filtros activos.
+- `GET /categorias`: Listado maestro de categorías (`src/features/products/api/categoriaApi.ts`).
 - `GET /precios/comparativo/todos`: Obtención de productos con precios consolidados para el módulo comparativo.
 - `GET /supermercados`: Listado de todos los supermercados habilitados en la plataforma.
 
