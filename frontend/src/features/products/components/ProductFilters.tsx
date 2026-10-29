@@ -75,6 +75,12 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
 
   const filterSections = (
     <div className="product-filters-sections">
+      <SupermarketFilterSection
+        supermarkets={supermarkets}
+        selectedSupermarketId={filterSupermarket}
+        onSelectSupermarket={onSupermarketChange}
+      />
+      
       <CategoryFilterSection
         selectedCategoryId={selectedCategoryId}
         onSelectCategory={onCategoryChange}
@@ -93,12 +99,6 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
         onMaxPriceChange={onMaxPriceChange}
         sortOrder={sortOrder}
         onSortOrderChange={onSortOrderChange}
-      />
-
-      <SupermarketFilterSection
-        supermarkets={supermarkets}
-        selectedSupermarketId={filterSupermarket}
-        onSelectSupermarket={onSupermarketChange}
       />
 
       <DiscountFilterSection

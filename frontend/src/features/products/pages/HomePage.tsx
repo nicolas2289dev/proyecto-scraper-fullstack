@@ -183,8 +183,9 @@ export function HomePage() {
               <ProductPagination
                 page={catalog.page}
                 totalPages={catalog.totalPages}
+                totalElements={catalog.totalElements}
                 onPageChange={catalog.goToPage}
-                disabled={catalog.searching}
+                disabled={catalog.searching || catalog.loading}
               />
             </section>
           </div>

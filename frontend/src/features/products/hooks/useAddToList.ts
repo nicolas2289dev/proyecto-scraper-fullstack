@@ -129,12 +129,16 @@ export function useAddToList(filterSupermarket?: number | 'all') {
       setTimeout(() => setShowModal(false), 1200);
     } catch (err: unknown) {
       console.error('Error agregando producto:', err);
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      showAlert(
-        'Error',
-        axiosErr?.response?.data?.message || 'Error al agregar producto a la lista',
-        'error'
-      );
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      const status = axiosErr?.response?.status;
+      const message =
+        axiosErr?.response?.data?.message || 'Error al agregar producto a la lista';
+
+      if (status === 409) {
+        showAlert('Atención', message, 'warning');
+      } else {
+        showAlert('Error', message, 'error');
+      }
     } finally {
       setAdding(false);
     }
