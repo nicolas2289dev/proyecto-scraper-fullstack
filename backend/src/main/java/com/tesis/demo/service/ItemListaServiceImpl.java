@@ -7,10 +7,12 @@ import com.tesis.demo.exception.ResourceNotFoundException;
 import com.tesis.demo.model.ItemLista;
 import com.tesis.demo.model.ListaCompra;
 import com.tesis.demo.model.Producto;
+import com.tesis.demo.model.ProductoTienda;
 import com.tesis.demo.model.Supermercado;
 import com.tesis.demo.repository.ItemListaRepository;
 import com.tesis.demo.repository.ListaCompraRepository;
 import com.tesis.demo.repository.ProductoRepository;
+import com.tesis.demo.repository.ProductoTiendaRepository;
 import com.tesis.demo.repository.SupermercadoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class ItemListaServiceImpl implements ItemListaService {
     private final ListaCompraRepository listaCompraRepository;
     private final ProductoRepository productoRepository;
     private final SupermercadoRepository supermercadoRepository;
+    private final ProductoTiendaRepository productoTiendaRepository;
 
     @Override
     @Transactional
@@ -34,7 +37,7 @@ public class ItemListaServiceImpl implements ItemListaService {
         ListaCompra lista = getListaAndCheckOwner(listaId, userEmail);
 
         boolean existeEnLaLista = itemListaRepository.existsByListaCompraIdAndProductoId(listaId, dto.getProductoId());
-        if(existeEnLaLista) {
+        if (existeEnLaLista) {
             throw new ConflictException("El producto ya existe en la lista");
         }
 
@@ -125,15 +128,38 @@ public class ItemListaServiceImpl implements ItemListaService {
     }
 
     private ItemListaDto mapToDto(ItemLista itemLista) {
+        Producto producto = itemLista.getProducto();
+        Long productoId = producto.getId();
+        Long superId = itemLista.getSupermercado() != null ? itemLista.getSupermercado().getId() : null;
+
+        String urlImagen = null;
+        if (superId != null) {
+            urlImagen = productoTiendaRepository.findByProductoIdAndSupermercadoId(productoId, superId)
+                    .map(ProductoTienda::getUrlImagen)
+                    .filter(u -> u != null && !u.isBlank())
+                    .orElse(null);
+        }
+        if (urlImagen == null) {
+            urlImagen = productoTiendaRepository.findByProductoId(productoId).stream()
+                    .map(ProductoTienda::getUrlImagen)
+                    .filter(u -> u != null && !u.isBlank())
+                    .findFirst()
+                    .orElse(null);
+        }
+
         return new ItemListaDto(
                 itemLista.getId(),
                 itemLista.getListaCompra().getId(),
-                itemLista.getProducto().getId(),
-                itemLista.getProducto().getNombreGenerico(),
-                itemLista.getProducto().getMarca(),
+                productoId,
+                producto.getNombreGenerico(),
+                producto.getMarca(),
                 itemLista.getCantidad(),
-                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getId() : null,
-                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getNombre() : null
+                superId,
+                itemLista.getSupermercado() != null ? itemLista.getSupermercado().getNombre() : null,
+                producto.getVarianteEspecifica(),
+                producto.getPesoValor(),
+                producto.getPesoUnidad(),
+                urlImagen
         );
     }
 }

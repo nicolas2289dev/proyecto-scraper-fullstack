@@ -64,7 +64,7 @@ class ListaCompraServiceImplTest {
     }
 
     @Test
-    void obtenerListaDetalle_debeRespetarSupermercadoYPrecioDelItem() {
+    void obtenerListaDetalle_debeRespetarSupermercadoYPrecioYMetadatosDelItem() {
         when(listaCompraRepository.findById(5L)).thenReturn(Optional.of(listaCompra));
 
         // Item agregado originalmente en Comodín en Casa (id=1, precio=1291.69)
@@ -76,7 +76,11 @@ class ListaCompraServiceImplTest {
                 "Swift",
                 1,
                 1L,
-                "Comodín en Casa"
+                "Comodín en Casa",
+                "Carne",
+                90.0,
+                "g",
+                "https://ejemplo.com/picadillo.jpg"
         );
         when(itemListaService.listarItems(5L, "test@ejemplo.com")).thenReturn(List.of(itemDto));
 
@@ -102,6 +106,10 @@ class ListaCompraServiceImplTest {
         assertEquals("Picadillo", itemConPrecio.getProductoNombre());
         assertEquals("Comodín en Casa", itemConPrecio.getSupermercadoNombre());
         assertEquals(1L, itemConPrecio.getSupermercadoId());
+        assertEquals("Carne", itemConPrecio.getVarianteEspecifica());
+        assertEquals(90.0, itemConPrecio.getPesoValor());
+        assertEquals("g", itemConPrecio.getPesoUnidad());
+        assertEquals("https://ejemplo.com/picadillo.jpg", itemConPrecio.getUrlImagen());
         assertEquals(BigDecimal.valueOf(1291.69), itemConPrecio.getPrecioUnitario());
         assertEquals(BigDecimal.valueOf(1291.69), itemConPrecio.getPrecioTotal());
         assertEquals(BigDecimal.valueOf(1291.69), detalle.getTotalEstimado());

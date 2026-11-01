@@ -69,6 +69,10 @@ public class ListaCompraServiceImpl implements ListaCompraService {
                     itemConPrecio.setCantidad(itemDto.getCantidad());
                     itemConPrecio.setSupermercadoId(itemDto.getSupermercadoId());
                     itemConPrecio.setSupermercadoNombre(itemDto.getSupermercadoNombre());
+                    itemConPrecio.setVarianteEspecifica(itemDto.getVarianteEspecifica());
+                    itemConPrecio.setPesoValor(itemDto.getPesoValor());
+                    itemConPrecio.setPesoUnidad(itemDto.getPesoUnidad());
+                    itemConPrecio.setUrlImagen(itemDto.getUrlImagen());
 
                     // Obtener el precio del producto para el supermercado asociado al ítem
                     historialPrecioService.obtenerUltimoPorProductoYSupermercado(itemDto.getProductoId(), itemDto.getSupermercadoId())
