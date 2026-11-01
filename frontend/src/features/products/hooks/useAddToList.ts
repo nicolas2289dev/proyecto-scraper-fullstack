@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/features/auth';
 import { listaApi, type ListaCompra } from '@/features/lists';
 import type { ProductoBusqueda } from '../types/products.types';
+import { notifyShoppingListUpdated } from './useLiveShoppingList';
 
 export interface AlertModalState {
   visible: boolean;
@@ -95,7 +96,8 @@ export function useAddToList(filterSupermarket?: number | 'all') {
         setSelectedSupermarketId(firstSuperId);
       }
 
-      setSelectedListId(listOptions.length ? listOptions[0].id : '');
+      const preferredList = listOptions.find((l) => l.favorita) || listOptions[0];
+      setSelectedListId(preferredList ? preferredList.id : '');
       setShowModal(true);
     },
     [isAuthenticated, openAuthModal, filterSupermarket, listOptions]
@@ -122,6 +124,9 @@ export function useAddToList(filterSupermarket?: number | 'all') {
         superId
       );
 
+      notifyShoppingListUpdated();
+      fetchLists();
+
       const targetList = listOptions.find((l) => l.id === Number(selectedListId));
       setSuccessMsg(
         `¡Agregaste ${quantity} unidad(es) a "${targetList?.nombreLista || 'tu lista'}"!`
@@ -129,20 +134,16 @@ export function useAddToList(filterSupermarket?: number | 'all') {
       setTimeout(() => setShowModal(false), 1200);
     } catch (err: unknown) {
       console.error('Error agregando producto:', err);
-      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
-      const status = axiosErr?.response?.status;
-      const message =
-        axiosErr?.response?.data?.message || 'Error al agregar producto a la lista';
-
-      if (status === 409) {
-        showAlert('Atención', message, 'warning');
-      } else {
-        showAlert('Error', message, 'error');
-      }
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      showAlert(
+        'Error',
+        axiosErr?.response?.data?.message || 'Error al agregar producto a la lista',
+        'error'
+      );
     } finally {
       setAdding(false);
     }
-  }, [selectedProduct, selectedListId, selectedSupermarketId, quantity, listOptions, showAlert]);
+  }, [selectedProduct, selectedListId, selectedSupermarketId, quantity, listOptions, showAlert, fetchLists]);
 
   return {
     showModal,

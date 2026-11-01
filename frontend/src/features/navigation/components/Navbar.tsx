@@ -55,7 +55,12 @@ export const Navbar: React.FC = () => {
   // Obtener conteo de ítems de la lista activa o favorita
   useEffect(() => {
     let isMounted = true;
-    if (isAuthenticated) {
+
+    const refreshActiveListCount = () => {
+      if (!isAuthenticated) {
+        if (isMounted) setActiveListItemsCount(0);
+        return;
+      }
       listaApi
         .getAll()
         .then((listas) => {
@@ -74,10 +79,14 @@ export const Navbar: React.FC = () => {
         .catch(() => {
           if (isMounted) setActiveListItemsCount(0);
         });
-    }
+    };
+
+    refreshActiveListCount();
+    window.addEventListener('ahorraya:list-updated', refreshActiveListCount);
 
     return () => {
       isMounted = false;
+      window.removeEventListener('ahorraya:list-updated', refreshActiveListCount);
     };
   }, [isAuthenticated]);
 
@@ -196,7 +205,7 @@ export const Navbar: React.FC = () => {
                   <span className="navbar-list-badge">{activeListItemsCount}</span>
                 )}
               </div>
-              <span className="navbar-list-label">Mi lista</span>
+              <span className="navbar-list-label">Mis listas</span>
             </button>
 
             {/* Menú Desplegable de Usuario (Profile Dropdown) */}

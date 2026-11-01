@@ -15,6 +15,10 @@ export interface ItemLista {
   precioTotal: number;
   supermercadoId?: number;
   supermercadoNombre: string;
+  varianteEspecifica?: string;
+  pesoValor?: number;
+  pesoUnidad?: string;
+  urlImagen?: string;
 }
 
 export interface ListaCompraDetalle extends ListaCompra {
