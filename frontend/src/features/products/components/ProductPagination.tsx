@@ -19,7 +19,6 @@ export interface ProductPaginationProps {
 export const ProductPagination: React.FC<ProductPaginationProps> = ({
   page,
   totalPages,
-  pageSize = 12,
   onPageChange,
   disabled = false,
 }) => {

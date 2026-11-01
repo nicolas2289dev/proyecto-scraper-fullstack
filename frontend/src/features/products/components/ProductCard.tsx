@@ -66,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = (props) => {
           <div className="product-stores-availability">
             <span className="product-stores-label">
               Disponible en {cantTiendas}{' '}
-              {cantTiendas === 1 ? 'supermercado' : 'supermercados'}:
+              {cantTiendas === 1 ? 'supermercado' : 'supermercados'}
             </span>
             <div className="product-stores-badges">
               {tiendas.map((t, idx) => {

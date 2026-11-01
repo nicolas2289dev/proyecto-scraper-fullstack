@@ -5,10 +5,12 @@ import { LayoutGrid, Layers, SlidersHorizontal } from 'lucide-react';
 
 import { useProductCatalog } from '../hooks/useProductCatalog';
 import { useAddToList } from '../hooks/useAddToList';
+import { useLiveShoppingList } from '../hooks/useLiveShoppingList';
 import { HeroBanner } from '../components/HeroBanner';
 import { ProductFilters } from '../components/ProductFilters';
 import { ProductCatalogGrid } from '../components/ProductCatalogGrid';
 import { ProductPagination } from '../components/ProductPagination';
+import { LiveShoppingListSidebar } from '../components/LiveShoppingListSidebar';
 import { AddToListModal } from '../components/AddToListModal';
 import { AlertModal } from '../components/AlertModal';
 
@@ -18,6 +20,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const catalog = useProductCatalog();
   const addToList = useAddToList(catalog.filterSupermarket);
+  const liveList = useLiveShoppingList();
 
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'clasica' | 'compacta'>(() => {
@@ -38,7 +41,7 @@ export function HomePage() {
     <>
       <main className="home-content">
         <div className="catalog-layout">
-          {/* Columna Izquierda: Sidebar de Filtros (Sticky en Desktop, Drawer en Móvil) */}
+          {/* Columna 1 (Izquierda): Sidebar de Filtros (Sticky en Desktop, Drawer en Móvil) */}
           <div className="catalog-sidebar-column">
             <ProductFilters
               selectedCategoryId={catalog.selectedCategoryId}
@@ -64,7 +67,7 @@ export function HomePage() {
             />
           </div>
 
-          {/* Columna Derecha: Hero Banner, Catálogo y Resultados */}
+          {/* Columna 2 (Centro): Hero Banner, Catálogo y Resultados */}
           <div className="catalog-main-column">
             <HeroBanner />
 
@@ -183,11 +186,29 @@ export function HomePage() {
               <ProductPagination
                 page={catalog.page}
                 totalPages={catalog.totalPages}
-                totalElements={catalog.totalElements}
                 onPageChange={catalog.goToPage}
-                disabled={catalog.searching || catalog.loading}
+                disabled={catalog.searching}
               />
             </section>
+          </div>
+
+          {/* Columna 3 (Derecha): Panel Lateral "Mi lista" (> 1280px Sticky, <= 1280px Drawer) */}
+          <div className="catalog-cart-column">
+            <LiveShoppingListSidebar
+              activeList={liveList.activeList}
+              items={liveList.items}
+              itemsCount={liveList.itemsCount}
+              totalUnitsCount={liveList.totalUnitsCount}
+              totalEstimado={liveList.totalEstimado}
+              loading={liveList.loading}
+              updatingItemId={liveList.updatingItemId}
+              isDrawerOpen={liveList.isDrawerOpen}
+              onOpenDrawer={() => liveList.setIsDrawerOpen(true)}
+              onCloseDrawer={() => liveList.setIsDrawerOpen(false)}
+              onIncrement={liveList.incrementItem}
+              onDecrement={liveList.decrementItem}
+              onRemove={liveList.removeItem}
+            />
           </div>
         </div>
       </main>
