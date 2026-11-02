@@ -1,179 +1,1135 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   MIS LISTAS DE COMPRAS - DISEÑO MODERNO & MINIMALISTA (LIGHT & DARK)
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .my-lists-container {
-  max-width: 900px;
-  background: var(--white);
-  border: 1px solid var(--accent-color);
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: var(--card-shadow);
-  margin: 60px auto;
+  max-width: 960px;
+  margin: clamp(1.5rem, 4vw, 3rem) auto;
+  padding: 0 clamp(1rem, 3vw, 1.5rem);
 }
 
+/* ─── Encabezado Principal de la Página ────────────────────────────────── */
 .my-lists-header {
-  margin-bottom: 2rem;
-  text-align: center;
+  margin-bottom: 1.75rem;
 }
 
-.my-lists-form {
+.my-lists-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+
+.my-lists-header .title {
+  margin: 0 0 0.35rem 0;
+  color: #f8fafc;
+  font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.my-lists-header .subtitle {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  max-width: 680px;
+}
+
+/* ─── Banner de Error ──────────────────────────────────────────────────── */
+.my-lists-error-banner {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 12px;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.28);
+  color: #fb7185;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.my-lists-error-icon {
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPOSER MINIMALISTA — CREAR / EDITAR LISTA (UNA SOLA BARRA)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.my-lists-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 2.25rem;
+}
+
+/* Barra de entrada */
+.my-lists-composer-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 52px;
+  padding: 0 0.55rem 0 1rem;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.07);
+  border: 1px solid transparent;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.my-lists-composer-bar:focus-within {
+  background: rgba(56, 189, 248, 0.06);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.my-lists-composer.is-editing .my-lists-composer-bar:focus-within {
+  background: rgba(129, 140, 248, 0.06);
+  border-color: rgba(129, 140, 248, 0.5);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+}
+
+.my-lists-composer-glyph {
+  display: inline-flex;
+  align-items: center;
+  color: #38bdf8;
+  flex-shrink: 0;
+  transition: color 160ms ease;
+}
+
+.my-lists-composer.is-editing .my-lists-composer-glyph {
+  color: #a5b4fc;
+}
+
+.my-lists-composer-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #f8fafc;
+  font-size: 0.95rem;
+  padding: 0.9rem 0;
+}
+
+.my-lists-composer-input::placeholder {
+  color: #64748b;
+}
+
+.my-lists-composer-clear {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(148, 163, 184, 0.16);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.my-lists-composer-clear:hover {
+  background: rgba(148, 163, 184, 0.3);
+  color: #f8fafc;
+}
+
+.my-lists-composer-fav {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms ease;
+}
+
+.my-lists-composer-fav:hover {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.my-lists-composer-fav.is-fav {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.my-lists-composer-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0 1.05rem;
+  border-radius: 10px;
+  border: none;
+  background: #38bdf8;
+  color: #051423;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms ease;
+}
+
+.my-lists-composer-submit:hover:not(:disabled) {
+  background: #7dd3fc;
+  transform: translateY(-1px);
+}
+
+.my-lists-composer.is-editing .my-lists-composer-submit {
+  background: #6366f1;
+  color: #fff;
+}
+
+.my-lists-composer.is-editing .my-lists-composer-submit:hover:not(:disabled) {
+  background: #818cf8;
+}
+
+.my-lists-composer-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Pie: sugerencias o cancelar */
+.my-lists-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0 0.4rem;
+}
+
+.my-lists-composer-presets {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 
-.my-lists-form-input {
-  flex: 1;
-  min-width: 200px;
+.my-lists-composer-preset {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 140ms ease;
 }
 
-.my-lists-checkbox-label {
+.my-lists-composer-preset:hover,
+.my-lists-composer-preset.is-active {
+  color: #38bdf8;
+}
+
+.my-lists-composer-cancel {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+
+.my-lists-composer-cancel:hover:not(:disabled) {
+  color: #f8fafc;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODAL DE CONFIRMACIÓN DE ELIMINACIÓN
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.my-lists-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-  font-weight: 500;
-  font-size: 0.95rem;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, 0.62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: myListsFade 160ms ease;
 }
 
-.my-lists-btn-submit {
-  width: auto !important;
-  padding: 0 1.5rem !important;
-}
-
-.my-lists-btn-cancel {
-  background-color: #6b7280;
-  width: auto;
-  padding: 0 1rem;
-}
-
-.my-lists-btn-cancel:hover {
-  background-color: #4b5563;
-}
-
-.my-lists-error-banner {
-  background-color: #fee2e2;
-  color: #dc2626;
-  padding: 0.75rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+.my-lists-modal {
+  width: 100%;
+  max-width: 380px;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
   text-align: center;
-  font-size: 0.875rem;
+  animation: myListsPop 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.my-lists-modal-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.9rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+}
+
+.my-lists-modal h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #f8fafc;
+}
+
+.my-lists-modal p {
+  margin: 0 0 1.4rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+.my-lists-modal p strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.my-lists-modal-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.my-lists-modal-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 42px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.my-lists-modal-btn.ghost {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #94a3b8;
+}
+
+.my-lists-modal-btn.ghost:hover:not(:disabled) {
+  background: rgba(148, 163, 184, 0.12);
+  color: #f8fafc;
+}
+
+.my-lists-modal-btn.danger {
+  background: #e11d48;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.28);
+}
+
+.my-lists-modal-btn.danger:hover:not(:disabled) {
+  background: #f43f5e;
+  transform: translateY(-1px);
+}
+
+.my-lists-modal-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes myListsFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes myListsPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.my-lists-spinner {
+  animation: myListsSpin 0.8s linear infinite;
+}
+
+@keyframes myListsSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LISTADO DE LISTAS (TARJETAS)
+   ══════════════════════════════════════════════════════════════════════════ */
 
 .my-lists-items-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.my-lists-empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-muted);
+.my-lists-items-header {
+  margin-bottom: 0.25rem;
 }
 
-.my-lists-empty-icon {
-  font-size: 2rem;
-  display: block;
-  margin-bottom: 1rem;
+.my-lists-items-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .my-lists-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem;
-  background-color: var(--white);
-  border-radius: 12px;
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--accent-color);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 16px;
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.12);
   cursor: pointer;
-}
-
-.my-lists-card.favorite {
-  border: 2px solid #fbbf24;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .my-lists-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.2);
+}
+
+.my-lists-card.favorite {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: radial-gradient(ellipse at top left, rgba(245, 158, 11, 0.06), transparent 70%), #0f172a;
 }
 
 .my-lists-card-main {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.95rem;
+  min-width: 0;
 }
 
 .my-lists-star-btn {
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  cursor: pointer;
-  color: var(--text-muted);
-  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #172338;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, color 0.15s ease;
-}
-
-.my-lists-star-btn.active {
-  color: #fbbf24;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 140ms ease;
 }
 
 .my-lists-star-btn:hover {
-  transform: scale(1.2);
+  background: #1e2d44;
+  color: #fbbf24;
+  transform: scale(1.05);
+}
+
+.my-lists-star-btn.active {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.my-lists-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.my-lists-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
 }
 
 .my-lists-card-title {
   margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  color: #f8fafc;
+  line-height: 1.3;
+}
+
+.my-lists-card-fav-pill {
+  padding: 0.12rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--text-dark);
-  font-size: 1.1rem;
 }
 
 .my-lists-card-details {
-  color: var(--text-muted);
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+}
+
+.my-lists-card-details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.my-lists-estimated-total {
+  color: #38bdf8;
+  font-weight: 700;
 }
 
 .my-lists-card-actions {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.my-lists-btn-edit,
+.my-lists-btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
 .my-lists-btn-edit {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  background-color: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.15s ease;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.25);
 }
 
 .my-lists-btn-edit:hover {
-  background-color: rgba(37, 99, 235, 0.2);
+  background: #0284c7;
+  color: white;
+  transform: translateY(-1px);
 }
 
 .my-lists-btn-delete {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  background-color: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.15s ease;
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  border-color: rgba(244, 63, 94, 0.25);
 }
 
 .my-lists-btn-delete:hover {
-  background-color: rgba(220, 38, 38, 0.2);
+  background: #e11d48;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Estado Vacío */
+.my-lists-empty-state {
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+  border-radius: 18px;
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.5);
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.my-lists-empty-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: rgba(148, 163, 184, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.my-lists-empty-state h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.my-lists-empty-state p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #94a3b8;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.my-lists-loading-state {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #94a3b8;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SOPORTE PARA TEMA CLARO (LIGHT THEME)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme='light'] .my-lists-header .title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-header .subtitle {
+  color: #475569;
+}
+
+[data-theme='light'] .my-lists-header-badge {
+  background: #e0f2fe;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+[data-theme='light'] .my-lists-composer-bar {
+  background: #f1f5f9;
+}
+
+[data-theme='light'] .my-lists-composer-bar:focus-within {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+[data-theme='light'] .my-lists-composer-input {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-composer-input::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .my-lists-composer-clear {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-composer-clear:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-composer-submit {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+[data-theme='light'] .my-lists-composer-submit:hover:not(:disabled) {
+  background: #0369a1;
+}
+
+[data-theme='light'] .my-lists-composer-preset {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-composer-preset:hover,
+[data-theme='light'] .my-lists-composer-preset.is-active {
+  color: #0284c7;
+}
+
+[data-theme='light'] .my-lists-composer-cancel {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-composer-cancel:hover:not(:disabled) {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-modal {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .my-lists-modal h3 {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-modal p {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-modal p strong {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-modal-btn.ghost {
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+[data-theme='light'] .my-lists-modal-btn.ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme='light'] .my-lists-card:hover {
+  border-color: #bae6fd;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .my-lists-card.favorite {
+  background: radial-gradient(ellipse at top left, rgba(254, 243, 199, 0.4), transparent 70%), #ffffff;
+  border-color: #fde68a;
+}
+
+[data-theme='light'] .my-lists-star-btn {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+[data-theme='light'] .my-lists-star-btn:hover {
+  background: #f1f5f9;
+  color: #d97706;
+}
+
+[data-theme='light'] .my-lists-star-btn.active {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #d97706;
+}
+
+[data-theme='light'] .my-lists-card-title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-card-details {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-estimated-total {
+  color: #0284c7;
+}
+
+[data-theme='light'] .my-lists-empty-state {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+[data-theme='light'] .my-lists-empty-state h3 {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-empty-state p {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-empty-icon-wrap {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVIDAD Y AJUSTES MOBILE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .my-lists-composer-bar {
+    padding-left: 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .my-lists-composer-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .my-lists-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .my-lists-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .my-lists-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 420px) {
+  .my-lists-composer-submit span {
+    display: none;
+  }
+
+  .my-lists-composer-submit {
+    padding: 0 0.75rem;
+  }
+}
+
+/* Nuevo modelo: panel de creación y tarjetas en cuadrícula */
+.my-lists-container {
+  max-width: 1120px;
+}
+
+.my-lists-composer {
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  padding: clamp(1.1rem, 3vw, 1.65rem);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at top right, rgba(56, 189, 248, 0.09), transparent 48%),
+    #0f172a;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.16);
+}
+
+.my-lists-composer.is-editing {
+  background:
+    radial-gradient(ellipse at top right, rgba(129, 140, 248, 0.12), transparent 48%),
+    #0f172a;
+}
+
+.my-lists-composer-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.my-lists-composer-heading-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 13px;
+  background: rgba(56, 189, 248, 0.11);
+  color: #38bdf8;
+}
+
+.my-lists-composer-heading h2 {
+  margin: 0 0 0.2rem;
+  color: #f8fafc;
+  font-size: 1.04rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.my-lists-composer-heading p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.my-lists-composer-bar {
+  min-height: 58px;
+  padding: 0.45rem 0.5rem 0.45rem 1rem;
+  border-color: rgba(148, 163, 184, 0.16);
+  border-radius: 13px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.my-lists-composer-input {
+  padding: 0.7rem 0;
+}
+
+.my-lists-composer-fav {
+  width: auto;
+  min-width: 40px;
+  gap: 0.4rem;
+  padding: 0 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.my-lists-composer-submit {
+  min-height: 40px;
+  padding: 0 1.05rem;
+  background: #0ea5e9;
+  color: #082f49;
+}
+
+.my-lists-composer-foot {
+  padding: 0 0.1rem;
+}
+
+.my-lists-composer-presets::before {
+  content: 'Ideas:';
+  margin-right: 0.25rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.my-lists-items-wrapper {
+  gap: 1rem;
+}
+
+.my-lists-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.2rem;
+}
+
+.my-lists-items-title {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+
+.my-lists-items-subtitle {
+  margin: 0.25rem 0 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.my-lists-items-count {
+  display: grid;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 0.55rem;
+  place-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 11px;
+  background: rgba(56, 189, 248, 0.1);
+  color: #7dd3fc;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.my-lists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 1rem;
+}
+
+.my-lists-card {
+  min-width: 0;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding: 1.15rem;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.48), #0f172a 68%);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.1);
+}
+
+.my-lists-card:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
+}
+
+.my-lists-card.favorite {
+  background:
+    radial-gradient(ellipse at top right, rgba(245, 158, 11, 0.1), transparent 50%),
+    linear-gradient(145deg, rgba(30, 41, 59, 0.48), #0f172a 68%);
+}
+
+.my-lists-card-main {
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.my-lists-star-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.my-lists-card-info {
+  flex: 1;
+  padding-top: 0.1rem;
+}
+
+.my-lists-card-title {
+  overflow-wrap: anywhere;
+  font-size: 0.98rem;
+}
+
+.my-lists-card-details {
+  row-gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.my-lists-card-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding: 0.65rem 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  font-size: 0.76rem;
+}
+
+.my-lists-card-total strong {
+  color: #38bdf8;
+  font-size: 0.94rem;
+  font-weight: 750;
+}
+
+.my-lists-card-actions {
+  justify-content: flex-end;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+[data-theme='light'] .my-lists-composer {
+  border-color: #e2e8f0;
+  background:
+    radial-gradient(ellipse at top right, rgba(14, 165, 233, 0.08), transparent 48%),
+    #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme='light'] .my-lists-composer.is-editing {
+  background:
+    radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.09), transparent 48%),
+    #ffffff;
+}
+
+[data-theme='light'] .my-lists-composer-heading h2,
+[data-theme='light'] .my-lists-items-title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .my-lists-composer-heading p,
+[data-theme='light'] .my-lists-items-subtitle {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-composer-bar {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+[data-theme='light'] .my-lists-composer-fav {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-composer-submit {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+[data-theme='light'] .my-lists-items-count {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+[data-theme='light'] .my-lists-card {
+  background: linear-gradient(145deg, #f8fafc, #ffffff 68%);
+}
+
+[data-theme='light'] .my-lists-card.favorite {
+  background:
+    radial-gradient(ellipse at top right, rgba(254, 243, 199, 0.65), transparent 50%),
+    linear-gradient(145deg, #fffbeb, #ffffff 68%);
+}
+
+[data-theme='light'] .my-lists-card-total,
+[data-theme='light'] .my-lists-card-actions {
+  border-color: #e2e8f0;
+}
+
+[data-theme='light'] .my-lists-card-total {
+  color: #64748b;
+}
+
+[data-theme='light'] .my-lists-card-total strong {
+  color: #0284c7;
+}
+
+@media (max-width: 640px) {
+  .my-lists-composer {
+    padding: 1rem;
+  }
+
+  .my-lists-composer-bar {
+    flex-wrap: wrap;
+    padding: 0.55rem;
+  }
+
+  .my-lists-composer-input {
+    flex-basis: calc(100% - 3rem);
+  }
+
+  .my-lists-composer-fav {
+    margin-left: auto;
+  }
+
+  .my-lists-composer-foot {
+    align-items: flex-start;
+  }
+
+  .my-lists-card {
+    min-height: 175px;
+  }
 }

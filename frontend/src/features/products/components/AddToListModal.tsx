@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertCircle, CheckCircle2, ListPlus } from 'lucide-react';
 import type { ProductoBusqueda } from '../types/products.types';
 import type { ListaCompra } from '@/features/lists';
 import { formatNombreCompleto } from '../utils/formatters';
@@ -162,13 +163,18 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
         <div className="modal-fields">
           {listOptions.length === 0 ? (
             <div className="empty-lists-warning">
-              <p>⚠️ Todavía no tenés listas creadas.</p>
+              <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem' }}>
+                <AlertCircle size={17} />
+                <span>Todavía no tenés listas creadas.</span>
+              </p>
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={onGoCreateList}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
               >
-                Crear mi primera lista
+                <ListPlus size={15} />
+                <span>Crear mi primera lista</span>
               </button>
             </div>
           ) : (
@@ -183,7 +189,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
                   <option value="">Seleccioná una lista</option>
                   {listOptions.map((l) => (
                     <option key={l.id} value={String(l.id)}>
-                      {l.favorita ? '⭐ ' : ''}
+                      {l.favorita ? '★ ' : ''}
                       {l.nombreLista}
                     </option>
                   ))}
@@ -205,7 +211,12 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
           )}
         </div>
 
-        {successMsg && <div className="modal-success">✅ {successMsg}</div>}
+        {successMsg && (
+          <div className="modal-success" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <CheckCircle2 size={16} />
+            <span>{successMsg}</span>
+          </div>
+        )}
 
         <div className="modal-actions">
           <button
