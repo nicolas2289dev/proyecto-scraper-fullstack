@@ -29,6 +29,14 @@
   - Controlador: UsersController
   - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR (CU-09)
 
+- DELETE /api/v1/usuarios/{id}
+  - Descripción: Elimina permanentemente una cuenta de usuario. También elimina sus asignaciones de roles, listas de compra e ítems asociados.
+  - Request: sin cuerpo.
+  - Response: ApiResponse<Void> con mensaje de confirmación.
+  - Controlador: UsersController
+  - Seguridad: requiere JWT con ROLE_ADMIN o ROLE_ADMINISTRADOR.
+  - Restricciones: un administrador no puede eliminar su propia cuenta en sesión; en ese caso se devuelve HTTP 409 Conflict. Si el usuario no existe, se devuelve HTTP 404 Not Found.
+
 - POST /api/v1/usuarios/asignar/roles
   - Descripción: Asigna un rol específico a un usuario existente.
   - Request: AssignRoleDto { usuarioId, rolId }

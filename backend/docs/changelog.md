@@ -1,5 +1,15 @@
 # Historial de tareas ejecutadas
 
+## [v2.6] - Eliminación Administrativa de Usuarios
+- **Endpoints y seguridad:**
+  - Añadido `DELETE /api/v1/usuarios/{id}`, protegido para los roles `ADMIN` y `ADMINISTRADOR`.
+  - Se impide que el administrador autenticado elimine su propia cuenta; el backend responde HTTP 409 Conflict.
+  - Cuando el ID no corresponde a un usuario existente, el backend responde HTTP 404 Not Found.
+- **Integridad de datos:**
+  - La operación se ejecuta en una transacción y elimina los roles asociados, los ítems de las listas de compra, las listas del usuario y finalmente la cuenta.
+- **Panel de administración:**
+  - Incorporado el botón de eliminación con confirmación explícita y advertencia de los datos asociados que se eliminarán.
+
 ## [v2.5] - Unificación de Catálogo Maestro y Normalización Robusta
 - **Unificación Multitienda:**
   - Implementado modelo de catálogo unificado: un único registro físico en la tabla `productos` vinculado a múltiples ofertas en `productos_tienda`.
