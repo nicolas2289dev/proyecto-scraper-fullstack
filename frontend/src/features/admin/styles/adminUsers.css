@@ -1306,3 +1306,72 @@
   background: #f0f9ff;
   color: #0369a1;
 }
+
+.admin-users-page .user-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.admin-users-page .btn-action-delete {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: #fca5a5;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.admin-users-page .btn-action-delete:hover:not(:disabled) {
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+}
+
+.admin-users-page .btn-action-delete:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.admin-users-page .modal-user-delete-confirmation .modal-icon {
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 10px;
+  background: rgba(127, 29, 29, 0.16);
+  color: #fca5a5;
+}
+
+.admin-users-page .modal-user-delete-confirmation .warning-notice {
+  line-height: 1.5;
+}
+
+.admin-users-page .modal-user-delete-confirmation .modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+[data-theme='light'] .admin-users-page .btn-action-delete {
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+[data-theme='light'] .admin-users-page .btn-action-delete:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+[data-theme='light'] .admin-users-page .modal-user-delete-confirmation .modal-icon {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+}

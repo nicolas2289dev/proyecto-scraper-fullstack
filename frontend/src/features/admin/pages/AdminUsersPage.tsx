@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
+  AlertTriangle,
   ArrowRight,
   Ban,
   Check,
@@ -10,6 +11,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   UserPlus,
   Users,
   UserRound,
@@ -49,6 +51,7 @@ export default function AdminUsersPage() {
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<UsuarioAdminDto | null>(null);
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<'ACTIVO' | 'INACTIVO'>('ACTIVO');
   const [modalConfirmacion, setModalConfirmacion] = useState(false);
+  const [usuarioEliminar, setUsuarioEliminar] = useState<UsuarioAdminDto | null>(null);
   const [procesando, setProcesando] = useState(false);
 
   useEffect(() => {
@@ -171,6 +174,24 @@ export default function AdminUsersPage() {
     }
   };
 
+  const confirmarEliminacionUsuario = async () => {
+    if (!usuarioEliminar) return;
+    setProcesando(true);
+    setError(null);
+    try {
+      await adminApi.eliminarUsuario(usuarioEliminar.id);
+      setSuccessMsg(`El usuario "${usuarioEliminar.nombre || usuarioEliminar.email}" fue eliminado correctamente.`);
+      setUsuarioEliminar(null);
+      await cargarUsuarios();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'No se pudo eliminar el usuario'));
+      setUsuarioEliminar(null);
+    } finally {
+      setProcesando(false);
+    }
+  };
+
   const usuariosFiltrados = useMemo(() => {
     return usuarios.filter((u) => {
       const coincideBusqueda =
@@ -257,6 +278,49 @@ export default function AdminUsersPage() {
         <div className="alert-banner alert-success">
           <CircleCheck size={17} aria-hidden="true" />
           <span>{successMsg}</span>
+        </div>
+      )}
+
+      {usuarioEliminar && (
+        <div className="modal-overlay" onClick={() => !procesando && setUsuarioEliminar(null)}>
+          <div className="modal-card modal-user-delete-confirmation" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-icon"><AlertTriangle size={21} aria-hidden="true" /></span>
+              <h3>Confirmar eliminación de usuario</h3>
+            </div>
+
+            <div className="modal-body">
+              <p>
+                ¿Estás seguro de eliminar permanentemente a{' '}
+                <strong>{usuarioEliminar.nombre || usuarioEliminar.email}</strong>?
+              </p>
+              <div className="warning-notice">
+                <AlertTriangle size={16} aria-hidden="true" />
+                <span>
+                  Esta acción no se puede deshacer. También se eliminarán sus roles, listas de compra y los productos guardados en ellas.
+                </span>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                onClick={() => setUsuarioEliminar(null)}
+                className="btn-modal-cancel"
+                disabled={procesando}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarEliminacionUsuario}
+                className="btn-modal-confirm btn-modal-danger"
+                disabled={procesando}
+              >
+                {procesando ? 'Eliminando...' : <><Trash2 size={16} aria-hidden="true" /> Sí, eliminar usuario</>}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -376,7 +440,8 @@ export default function AdminUsersPage() {
                         {estaActivo ? 'ACTIVO' : 'INACTIVO'}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'center' }}>
+                    <td>
+                      <div className="user-row-actions">
                       <button
                         onClick={() => solicitarCambioEstado(u)}
                         disabled={esUsuarioActual && estaActivo}
@@ -392,6 +457,17 @@ export default function AdminUsersPage() {
                       >
                         {estaActivo ? <Ban size={16} aria-hidden="true" /> : <Check size={16} aria-hidden="true" />}
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setUsuarioEliminar(u)}
+                        disabled={esUsuarioActual}
+                        title={esUsuarioActual ? 'No podés eliminar tu propia cuenta de administrador en sesión' : 'Eliminar usuario permanentemente'}
+                        aria-label={`Eliminar usuario ${u.nombre || u.email}`}
+                        className="btn-action-delete"
+                      >
+                        <Trash2 size={16} aria-hidden="true" />
+                      </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -531,6 +607,7 @@ export default function AdminUsersPage() {
                   <span>El usuario no podrá iniciar sesión en la plataforma mientras su cuenta permanezca inactiva.</span>
                 </div>
               )}
+
             </div>
 
             <div className="modal-actions">

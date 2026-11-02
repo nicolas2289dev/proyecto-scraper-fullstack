@@ -13,7 +13,7 @@ public interface UsuarioService {
     List<UsuarioDto> listar();
     UsuarioDto asignarRol(AssignRoleDto dto);
     UsuarioDto actualizarEstado(Long id, String nuevoEstado, String adminEmail);
+    void eliminar(Long id, String adminEmail);
     Rol crearRol(RolDto rolDto);
     List<Rol> listarRoles();
 }
-

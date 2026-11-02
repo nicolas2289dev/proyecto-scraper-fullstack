@@ -28,6 +28,10 @@ export const adminApi = {
     return res.data?.data;
   },
 
+  eliminarUsuario: async (id: number): Promise<void> => {
+    await apiClient.delete(`/usuarios/${id}`);
+  },
+
   createUsuario: async (dto: {
     email: string;
     password: string;

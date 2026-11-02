@@ -9,4 +9,5 @@ import java.util.List;
 public interface UsuarioRolRepository extends JpaRepository<UsuarioRol, Long> {
     List<UsuarioRol> findByUsuario(Usuario usuario);
     boolean existsByUsuarioAndRol(Usuario usuario, Rol rol);
+    void deleteByUsuario(Usuario usuario);
 }
