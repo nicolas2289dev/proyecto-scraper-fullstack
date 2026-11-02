@@ -1,4 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
+import {
+  ArrowRight,
+  Ban,
+  Check,
+  CircleCheck,
+  CircleX,
+  Info,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  UserPlus,
+  Users,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { adminApi } from '../api/adminApi';
 import type { UsuarioAdminDto, RolAdminDto } from '../types/admin.types';
 import { useAuthStore } from '@/features/auth';
@@ -184,21 +200,22 @@ export default function AdminUsersPage() {
   }, [usuarios]);
 
   return (
-    <div className="admin-container">
+    <div className="admin-container admin-users-page">
       <div className="admin-header">
         <div>
-          <span className="admin-badge-cu">CU-09</span>
+          <span className="admin-badge-cu">Administración</span>
           <h1 className="admin-title">Gestión de Cuentas de Usuarios</h1>
           <p className="admin-subtitle">
-            Control de estados operativos (Habilitar / Inhabilitar) y auditoría de accesos al sistema.
+            Usuarios, roles y estado de acceso.
           </p>
         </div>
         <div className="header-actions">
-          <button onClick={abrirCrearUsuario} className="btn-primary-action" title="Crear nuevo usuario">
-            ➕ Nuevo usuario
+          <button onClick={cargarUsuarios} className="btn-refresh" title="Actualizar listado" aria-label="Actualizar listado" disabled={loading}>
+            <RefreshCw size={16} aria-hidden="true" />
           </button>
-          <button onClick={cargarUsuarios} className="btn-refresh" title="Refrescar lista" disabled={loading}>
-            🔄 Actualizar
+          <button onClick={abrirCrearUsuario} className="btn-primary-action" title="Crear nuevo usuario">
+            <UserPlus size={16} aria-hidden="true" />
+            <span>Crear usuario</span>
           </button>
         </div>
       </div>
@@ -206,28 +223,28 @@ export default function AdminUsersPage() {
       {/* Tarjetas de Métricas */}
       <div className="metrics-grid">
         <div className="metric-card">
-          <span className="metric-icon">👥</span>
+          <span className="metric-icon"><Users size={18} aria-hidden="true" /></span>
           <div>
             <div className="metric-value">{metricas.total}</div>
-            <div className="metric-label">Total Cuentas</div>
+            <div className="metric-label">Total de usuarios</div>
           </div>
         </div>
         <div className="metric-card metric-card-success">
-          <span className="metric-icon">✅</span>
+          <span className="metric-icon"><CircleCheck size={18} aria-hidden="true" /></span>
           <div>
             <div className="metric-value">{metricas.activos}</div>
-            <div className="metric-label">Cuentas Activas</div>
+            <div className="metric-label">Activos</div>
           </div>
         </div>
         <div className="metric-card metric-card-danger">
-          <span className="metric-icon">⛔</span>
+          <span className="metric-icon"><CircleX size={18} aria-hidden="true" /></span>
           <div>
             <div className="metric-value">{metricas.inactivos}</div>
-            <div className="metric-label">Cuentas Inhabilitadas</div>
+            <div className="metric-label">Inactivos</div>
           </div>
         </div>
         <div className="metric-card metric-card-warning">
-          <span className="metric-icon">🛡️</span>
+          <span className="metric-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
           <div>
             <div className="metric-value">{metricas.admins}</div>
             <div className="metric-label">Administradores</div>
@@ -238,23 +255,23 @@ export default function AdminUsersPage() {
       {/* Banners de Notificación */}
       {successMsg && (
         <div className="alert-banner alert-success">
-          <span>✅</span>
+          <CircleCheck size={17} aria-hidden="true" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {error && (
         <div className="alert-banner alert-error">
-          <span>⚠️</span>
+          <ShieldAlert size={17} aria-hidden="true" />
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="alert-close">✕</button>
+          <button onClick={() => setError(null)} className="alert-close" aria-label="Cerrar mensaje"><X size={16} /></button>
         </div>
       )}
 
       {/* Barra de Filtros y Búsqueda */}
       <div className="filters-bar">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <Search className="search-icon" size={16} aria-hidden="true" />
           <input
             type="text"
             placeholder="Buscar por nombre o correo electrónico..."
@@ -263,7 +280,7 @@ export default function AdminUsersPage() {
             className="search-input"
           />
           {busqueda && (
-            <button onClick={() => setBusqueda('')} className="btn-clear-search">✕</button>
+            <button onClick={() => setBusqueda('')} className="btn-clear-search" aria-label="Limpiar búsqueda"><X size={15} /></button>
           )}
         </div>
 
@@ -298,7 +315,7 @@ export default function AdminUsersPage() {
           </div>
         ) : usuariosFiltrados.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-icon">👤</span>
+            <UserRound className="empty-icon" size={28} aria-hidden="true" />
             <p>No se encontraron cuentas con los criterios de búsqueda seleccionados.</p>
           </div>
         ) : (
@@ -371,8 +388,9 @@ export default function AdminUsersPage() {
                             : 'Habilitar acceso a esta cuenta'
                         }
                         className={`btn-action-status ${estaActivo ? 'btn-deactivate' : 'btn-activate'}`}
+                        aria-label={estaActivo ? 'Inhabilitar usuario' : 'Habilitar usuario'}
                       >
-                        {estaActivo ? '⛔ Inhabilitar' : '✅ Habilitar'}
+                        {estaActivo ? <Ban size={16} aria-hidden="true" /> : <Check size={16} aria-hidden="true" />}
                       </button>
                     </td>
                   </tr>
@@ -387,7 +405,7 @@ export default function AdminUsersPage() {
         <div className="modal-overlay" onClick={() => !procesandoCreacion && setModalCrearUsuario(false)}>
           <div className="modal-card modal-crear-usuario" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-icon">👤</span>
+              <span className="modal-icon"><UserPlus size={21} aria-hidden="true" /></span>
               <h3>Crear nuevo usuario</h3>
             </div>
 
@@ -474,17 +492,21 @@ export default function AdminUsersPage() {
       {/* Modal de Confirmación de Cambio de Estado */}
       {modalConfirmacion && usuarioSeleccionado && (
         <div className="modal-overlay" onClick={() => !procesando && setModalConfirmacion(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card modal-status-confirmation" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <span className="modal-icon">
-                {nuevoEstadoPendiente === 'INACTIVO' ? '⚠️' : '✨'}
+                {nuevoEstadoPendiente === 'INACTIVO'
+                  ? <ShieldAlert size={21} aria-hidden="true" />
+                  : <ShieldCheck size={21} aria-hidden="true" />}
               </span>
               <h3>Confirmar Modificación de Estado</h3>
             </div>
 
             <div className="modal-body">
               <p>
-                ¿Estás seguro de que deseas cambiar el estado operativo del usuario{' '}
+                {nuevoEstadoPendiente === 'INACTIVO'
+                  ? '¿Confirmás que querés inhabilitar el acceso de'
+                  : '¿Confirmás que querés volver a habilitar el acceso de'}{' '}
                 <strong>{usuarioSeleccionado.nombre || usuarioSeleccionado.email}</strong>?
               </p>
               <div className="state-transition-card">
@@ -494,7 +516,7 @@ export default function AdminUsersPage() {
                     {usuarioSeleccionado.estado}
                   </span>
                 </div>
-                <span className="transition-arrow">➔</span>
+                <ArrowRight className="transition-arrow" size={18} aria-hidden="true" />
                 <div className="transition-step">
                   <span className="step-label">Nuevo Estado:</span>
                   <span className={`status-pill ${nuevoEstadoPendiente === 'ACTIVO' ? 'status-active' : 'status-inactive'}`}>
@@ -505,7 +527,8 @@ export default function AdminUsersPage() {
 
               {nuevoEstadoPendiente === 'INACTIVO' && (
                 <div className="warning-notice">
-                  ℹ️ El usuario no podrá iniciar sesión en la plataforma mientras su cuenta permanezca inactiva.
+                  <Info size={16} aria-hidden="true" />
+                  <span>El usuario no podrá iniciar sesión en la plataforma mientras su cuenta permanezca inactiva.</span>
                 </div>
               )}
             </div>
@@ -525,7 +548,11 @@ export default function AdminUsersPage() {
                 className={`btn-modal-confirm ${nuevoEstadoPendiente === 'INACTIVO' ? 'btn-modal-danger' : 'btn-modal-success'}`}
                 disabled={procesando}
               >
-                {procesando ? 'Procesando...' : `Sí, cambiar a ${nuevoEstadoPendiente}`}
+                {procesando
+                  ? 'Procesando...'
+                  : nuevoEstadoPendiente === 'INACTIVO'
+                    ? 'Sí, inhabilitar cuenta'
+                    : 'Sí, habilitar cuenta'}
               </button>
             </div>
           </div>

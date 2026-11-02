@@ -1,4 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
+import {
+  AlertTriangle,
+  Bot,
+  CheckCircle2,
+  Image,
+  Info,
+  Link,
+  Package,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Save,
+  Search,
+  ShieldAlert,
+  Store,
+  Tags,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { adminApi } from '../api/adminApi';
 import type {
   CategoriaAdminDto,
@@ -8,9 +27,22 @@ import type {
   CriterioBusquedaAdminDto,
 } from '../types/admin.types';
 import { getErrorMessage } from '@/shared/lib/utils';
+import { ProductPagination } from '../../products/components/ProductPagination';
 import '../styles/adminCatalog.css';
 
 type TabType = 'CRITERIOS' | 'CATEGORIAS' | 'PRODUCTOS' | 'TIENDAS';
+type PendingDeletion =
+  | {
+      tipo: 'CATEGORIA' | 'CRITERIO' | 'PRODUCTO' | 'TIENDA';
+      id: number;
+      nombre: string;
+    }
+  | {
+      tipo: 'PRODUCTOS_SELECCIONADOS';
+      ids: number[];
+      nombre: string;
+    };
+const ADMIN_TABLE_PAGE_SIZE = 10;
 
 export default function AdminCatalogPage() {
   const [activeTab, setActiveTab] = useState<TabType>('CRITERIOS');
@@ -31,6 +63,8 @@ export default function AdminCatalogPage() {
   const [filtroCatId, setFiltroCatId] = useState<string>('TODAS');
   const [filtroSuperId, setFiltroSuperId] = useState<string>('TODOS');
   const [productosSeleccionados, setProductosSeleccionados] = useState<number[]>([]);
+  const [paginaProductos, setPaginaProductos] = useState(0);
+  const [paginaTiendas, setPaginaTiendas] = useState(0);
 
   // Modales de Categoría (Crear / Editar)
   const [modalCategoria, setModalCategoria] = useState(false);
@@ -66,11 +100,7 @@ export default function AdminCatalogPage() {
   });
 
   // Modal Confirmar Eliminación Genérico
-  const [modalEliminar, setModalEliminar] = useState<{
-    tipo: 'CATEGORIA' | 'CRITERIO' | 'PRODUCTO' | 'TIENDA';
-    id: number;
-    nombre: string;
-  } | null>(null);
+  const [modalEliminar, setModalEliminar] = useState<PendingDeletion | null>(null);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [procesando, setProcesando] = useState(false);
@@ -334,18 +364,22 @@ export default function AdminCatalogPage() {
     setProcesando(true);
     setError(null);
     try {
-      const { tipo, id, nombre } = modalEliminar;
-      if (tipo === 'CATEGORIA') {
-        await adminApi.eliminarCategoria(id);
-        notificarExito(`Categoría "${nombre}" eliminada correctamente.`);
-      } else if (tipo === 'CRITERIO') {
-        await adminApi.eliminarCriterioBusqueda(id);
-        notificarExito(`Criterio de búsqueda "${nombre}" eliminado.`);
-      } else if (tipo === 'PRODUCTO') {
-        await adminApi.eliminarProducto(id);
-        notificarExito(`Producto maestro "${nombre}" eliminado.`);
-      } else if (tipo === 'TIENDA') {
-        await adminApi.eliminarProductoTienda(id);
+      if (modalEliminar.tipo === 'PRODUCTOS_SELECCIONADOS') {
+        const cantidad = modalEliminar.ids.length;
+        await adminApi.eliminarProductos(modalEliminar.ids);
+        setProductosSeleccionados([]);
+        notificarExito(`Se eliminaron ${cantidad} producto${cantidad === 1 ? '' : 's'} del catálogo maestro.`);
+      } else if (modalEliminar.tipo === 'CATEGORIA') {
+        await adminApi.eliminarCategoria(modalEliminar.id);
+        notificarExito(`Categoría "${modalEliminar.nombre}" eliminada correctamente.`);
+      } else if (modalEliminar.tipo === 'CRITERIO') {
+        await adminApi.eliminarCriterioBusqueda(modalEliminar.id);
+        notificarExito(`Criterio de búsqueda "${modalEliminar.nombre}" eliminado.`);
+      } else if (modalEliminar.tipo === 'PRODUCTO') {
+        await adminApi.eliminarProducto(modalEliminar.id);
+        notificarExito(`Producto maestro "${modalEliminar.nombre}" eliminado.`);
+      } else if (modalEliminar.tipo === 'TIENDA') {
+        await adminApi.eliminarProductoTienda(modalEliminar.id);
         notificarExito(`Asignación a supermercado eliminada.`);
       }
       setModalEliminar(null);
@@ -390,6 +424,23 @@ export default function AdminCatalogPage() {
     });
   }, [productos, filtroTexto, filtroCatId]);
 
+  const productosPagina = useMemo(
+    () => productosFiltrados.slice(
+      paginaProductos * ADMIN_TABLE_PAGE_SIZE,
+      (paginaProductos + 1) * ADMIN_TABLE_PAGE_SIZE
+    ),
+    [productosFiltrados, paginaProductos]
+  );
+
+  useEffect(() => {
+    setPaginaProductos(0);
+  }, [filtroTexto, filtroCatId]);
+
+  useEffect(() => {
+    const lastPage = Math.max(0, Math.ceil(productosFiltrados.length / ADMIN_TABLE_PAGE_SIZE) - 1);
+    setPaginaProductos((page) => Math.min(page, lastPage));
+  }, [productosFiltrados.length]);
+
   const toggleProductoSeleccionado = (id: number) => {
     setProductosSeleccionados((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -397,7 +448,7 @@ export default function AdminCatalogPage() {
   };
 
   const seleccionarTodosVisibles = () => {
-    const idsVisibles = productosFiltrados.map((p) => p.id);
+    const idsVisibles = productosPagina.map((p) => p.id);
     const estanTodosSeleccionados = idsVisibles.length > 0 && idsVisibles.every((id) => productosSeleccionados.includes(id));
 
     if (estanTodosSeleccionados) {
@@ -408,20 +459,13 @@ export default function AdminCatalogPage() {
     setProductosSeleccionados((prev) => Array.from(new Set([...prev, ...idsVisibles])));
   };
 
-  const eliminarSeleccionados = async () => {
+  const solicitarEliminacionSeleccionados = () => {
     if (!productosSeleccionados.length) return;
-
-    setProcesando(true);
-    try {
-      await adminApi.eliminarProductos(productosSeleccionados);
-      setProductosSeleccionados([]);
-      notificarExito(`Se eliminaron ${productosSeleccionados.length} producto${productosSeleccionados.length > 1 ? 's' : ''} del catálogo maestro.`);
-      await cargarTodo();
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'No se pudieron eliminar los productos seleccionados'));
-    } finally {
-      setProcesando(false);
-    }
+    setModalEliminar({
+      tipo: 'PRODUCTOS_SELECCIONADOS',
+      ids: [...productosSeleccionados],
+      nombre: `${productosSeleccionados.length} producto${productosSeleccionados.length === 1 ? '' : 's'} seleccionado${productosSeleccionados.length === 1 ? '' : 's'}`,
+    });
   };
 
   const tiendasFiltradas = useMemo(() => {
@@ -435,8 +479,25 @@ export default function AdminCatalogPage() {
     });
   }, [productosTienda, filtroSuperId, filtroTexto]);
 
+  const tiendasPagina = useMemo(
+    () => tiendasFiltradas.slice(
+      paginaTiendas * ADMIN_TABLE_PAGE_SIZE,
+      (paginaTiendas + 1) * ADMIN_TABLE_PAGE_SIZE
+    ),
+    [tiendasFiltradas, paginaTiendas]
+  );
+
+  useEffect(() => {
+    setPaginaTiendas(0);
+  }, [filtroTexto, filtroSuperId]);
+
+  useEffect(() => {
+    const lastPage = Math.max(0, Math.ceil(tiendasFiltradas.length / ADMIN_TABLE_PAGE_SIZE) - 1);
+    setPaginaTiendas((page) => Math.min(page, lastPage));
+  }, [tiendasFiltradas.length]);
+
   return (
-    <div className="admin-container">
+    <div className="admin-container admin-catalog-page">
       {/* Header */}
       <div className="admin-header">
         <div>
@@ -447,23 +508,24 @@ export default function AdminCatalogPage() {
           </p>
         </div>
         <button onClick={cargarTodo} className="btn-refresh" title="Sincronizar base de datos" disabled={loading}>
-          🔄 Sincronizar
+          <RefreshCw size={16} aria-hidden="true" />
+          <span>Sincronizar</span>
         </button>
       </div>
 
       {/* Alertas */}
       {successMsg && (
         <div className="alert-banner alert-success">
-          <span>✅</span>
+          <CheckCircle2 size={17} aria-hidden="true" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {error && (
         <div className="alert-banner alert-error">
-          <span>⚠️</span>
+          <ShieldAlert size={17} aria-hidden="true" />
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="alert-close">✕</button>
+          <button onClick={() => setError(null)} className="alert-close" aria-label="Cerrar mensaje"><X size={16} /></button>
         </div>
       )}
 
@@ -473,25 +535,29 @@ export default function AdminCatalogPage() {
           className={`tab-btn ${activeTab === 'CRITERIOS' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('CRITERIOS')}
         >
-          🔎 Criterios de Búsqueda (Scraper) <span className="tab-count">({criterios.length})</span>
+          <Bot size={16} aria-hidden="true" />
+          <span>Criterios de Búsqueda (Scraper)</span><span className="tab-count">({criterios.length})</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'CATEGORIAS' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('CATEGORIAS')}
         >
-          🏷️ Categorías Comerciales <span className="tab-count">({categorias.length})</span>
+          <Tags size={16} aria-hidden="true" />
+          <span>Categorías Comerciales</span><span className="tab-count">({categorias.length})</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'PRODUCTOS' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('PRODUCTOS')}
         >
-          📦 Catálogo Maestro <span className="tab-count">({productos.length})</span>
+          <Package size={16} aria-hidden="true" />
+          <span>Catálogo Maestro</span><span className="tab-count">({productos.length})</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'TIENDAS' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('TIENDAS')}
         >
-          🏪 Asignación a Supermercados <span className="tab-count">({productosTienda.length})</span>
+          <Store size={16} aria-hidden="true" />
+          <span>Asignación a Supermercados</span><span className="tab-count">({productosTienda.length})</span>
         </button>
       </div>
 
@@ -502,13 +568,16 @@ export default function AdminCatalogPage() {
         <div className="tab-content">
           <div className="action-bar">
             <div className="filters-group">
-              <input
-                type="text"
-                placeholder="Buscar criterio o categoría..."
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-                className="input-search"
-              />
+              <label className="catalog-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="text"
+                  placeholder="Buscar criterio o categoría..."
+                  value={filtroTexto}
+                  onChange={(e) => setFiltroTexto(e.target.value)}
+                  className="input-search"
+                />
+              </label>
               <select
                 value={filtroCatId}
                 onChange={(e) => setFiltroCatId(e.target.value)}
@@ -522,12 +591,14 @@ export default function AdminCatalogPage() {
             </div>
 
             <button onClick={abrirCrearCriterio} className="btn-primary-action">
-              + Agregar Criterio de Búsqueda
+              <Plus size={16} aria-hidden="true" />
+              <span>Agregar Criterio de Búsqueda</span>
             </button>
           </div>
 
           <p className="tab-helper-text">
-            ℹ️ Estos términos alimentan la matriz cartesiana <code>supermercados × criterios_busqueda</code>. El bot de Python los utiliza en su Modo Descubrimiento para rastrear y extraer productos automáticamente.
+            <Info size={16} aria-hidden="true" />
+            <span>Estos términos alimentan la matriz cartesiana <code>supermercados × criterios_busqueda</code>. El bot de Python los utiliza en su Modo Descubrimiento para rastrear y extraer productos automáticamente.</span>
           </p>
 
           <div className="table-wrapper">
@@ -535,7 +606,7 @@ export default function AdminCatalogPage() {
               <div className="loading-state"><div className="spinner"></div><p>Cargando criterios de búsqueda...</p></div>
             ) : criteriosFiltrados.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-icon">🔎</span>
+                <Bot className="empty-icon" size={28} aria-hidden="true" />
                 <p>No se encontraron criterios de búsqueda registrados en la tabla <code>criterios_busqueda</code>.</p>
               </div>
             ) : (
@@ -553,7 +624,7 @@ export default function AdminCatalogPage() {
                     <tr key={cr.id}>
                       <td className="cell-id">#{cr.id}</td>
                       <td>
-                        <span className="keyword-highlight">🔍 "{cr.terminoBusqueda}"</span>
+                        <span className="keyword-highlight"><Search size={14} aria-hidden="true" /> "{cr.terminoBusqueda}"</span>
                       </td>
                       <td>
                         <span className="category-pill">
@@ -567,7 +638,7 @@ export default function AdminCatalogPage() {
                             className="btn-edit"
                             title="Modificar término o categoría"
                           >
-                            ✏️ Editar
+                            <Pencil size={14} aria-hidden="true" /><span>Editar</span>
                           </button>
                           <button
                             onClick={() =>
@@ -580,7 +651,7 @@ export default function AdminCatalogPage() {
                             className="btn-delete"
                             title="Eliminar criterio de búsqueda"
                           >
-                            🗑️ Eliminar
+                            <Trash2 size={14} aria-hidden="true" /><span>Eliminar</span>
                           </button>
                         </div>
                       </td>
@@ -600,17 +671,21 @@ export default function AdminCatalogPage() {
         <div className="tab-content">
           <div className="action-bar">
             <div className="filters-group">
-              <input
-                type="text"
-                placeholder="Buscar categoría por nombre..."
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-                className="input-search"
-              />
+              <label className="catalog-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="text"
+                  placeholder="Buscar categoría por nombre..."
+                  value={filtroTexto}
+                  onChange={(e) => setFiltroTexto(e.target.value)}
+                  className="input-search"
+                />
+              </label>
             </div>
 
             <button onClick={abrirCrearCategoria} className="btn-primary-action">
-              + Agregar Nueva Categoría
+              <Plus size={16} aria-hidden="true" />
+              <span>Agregar Nueva Categoría</span>
             </button>
           </div>
 
@@ -619,7 +694,7 @@ export default function AdminCatalogPage() {
               <div className="loading-state"><div className="spinner"></div><p>Cargando categorías...</p></div>
             ) : categoriasFiltradas.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-icon">🏷️</span>
+                <Tags className="empty-icon" size={28} aria-hidden="true" />
                 <p>No se encontraron categorías comerciales en la base de datos.</p>
               </div>
             ) : (
@@ -642,13 +717,13 @@ export default function AdminCatalogPage() {
                       <tr key={c.id}>
                         <td className="cell-id">#{c.id}</td>
                         <td>
-                          <span className="product-title">🏷️ {c.nombre}</span>
+                          <span className="product-title"><Tags size={15} aria-hidden="true" /> {c.nombre}</span>
                         </td>
                         <td>
-                          <span className="unit-badge">🔎 {cantCriterios} términos</span>
+                          <span className="unit-badge"><Bot size={14} aria-hidden="true" /> {cantCriterios} términos</span>
                         </td>
                         <td>
-                          <span className="unit-badge">📦 {cantProductos} productos</span>
+                          <span className="unit-badge"><Package size={14} aria-hidden="true" /> {cantProductos} productos</span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <div className="action-buttons-row">
@@ -657,7 +732,7 @@ export default function AdminCatalogPage() {
                               className="btn-edit"
                               title="Modificar nombre de la categoría"
                             >
-                              ✏️ Editar
+                              <Pencil size={14} aria-hidden="true" /><span>Editar</span>
                             </button>
                             <button
                               onClick={() =>
@@ -670,7 +745,7 @@ export default function AdminCatalogPage() {
                               className="btn-delete"
                               title="Eliminar categoría"
                             >
-                              🗑️ Eliminar
+                              <Trash2 size={14} aria-hidden="true" /><span>Eliminar</span>
                             </button>
                           </div>
                         </td>
@@ -691,13 +766,16 @@ export default function AdminCatalogPage() {
         <div className="tab-content">
           <div className="action-bar">
             <div className="filters-group">
-              <input
-                type="text"
-                placeholder="Buscar por nombre, marca o variante..."
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-                className="input-search"
-              />
+              <label className="catalog-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, marca o variante..."
+                  value={filtroTexto}
+                  onChange={(e) => setFiltroTexto(e.target.value)}
+                  className="input-search"
+                />
+              </label>
               <select
                 value={filtroCatId}
                 onChange={(e) => setFiltroCatId(e.target.value)}
@@ -715,25 +793,27 @@ export default function AdminCatalogPage() {
                 type="button"
                 onClick={seleccionarTodosVisibles}
                 className="btn-secondary-action"
-                disabled={productosFiltrados.length === 0 || procesando}
+                disabled={productosPagina.length === 0 || procesando}
               >
-                {productosFiltrados.length > 0 && productosFiltrados.every((p) => productosSeleccionados.includes(p.id))
+                {productosPagina.length > 0 && productosPagina.every((p) => productosSeleccionados.includes(p.id))
                   ? 'Deseleccionar visibles'
                   : 'Seleccionar visibles'}
               </button>
 
               <button
                 type="button"
-                onClick={eliminarSeleccionados}
+                onClick={solicitarEliminacionSeleccionados}
                 className="btn-delete"
                 disabled={productosSeleccionados.length === 0 || procesando}
               >
-                🗑️ Eliminar seleccionados ({productosSeleccionados.length})
+                <Trash2 size={15} aria-hidden="true" />
+                <span>Eliminar seleccionados ({productosSeleccionados.length})</span>
               </button>
             </div>
 
             <button onClick={abrirCrearProducto} className="btn-primary-action">
-              + Agregar Producto Maestro
+              <Plus size={16} aria-hidden="true" />
+              <span>Agregar Producto Maestro</span>
             </button>
           </div>
 
@@ -742,7 +822,7 @@ export default function AdminCatalogPage() {
               <div className="loading-state"><div className="spinner"></div><p>Cargando productos maestros...</p></div>
             ) : productosFiltrados.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-icon">📦</span>
+                <Package className="empty-icon" size={28} aria-hidden="true" />
                 <p>No se encontraron productos maestros con los filtros aplicados.</p>
               </div>
             ) : (
@@ -752,7 +832,7 @@ export default function AdminCatalogPage() {
                     <th style={{ width: '40px' }}>
                       <input
                         type="checkbox"
-                        checked={productosFiltrados.length > 0 && productosFiltrados.every((p) => productosSeleccionados.includes(p.id))}
+                        checked={productosPagina.length > 0 && productosPagina.every((p) => productosSeleccionados.includes(p.id))}
                         onChange={seleccionarTodosVisibles}
                         aria-label="Seleccionar todos los productos visibles"
                       />
@@ -767,7 +847,7 @@ export default function AdminCatalogPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {productosFiltrados.map((p) => (
+                  {productosPagina.map((p) => (
                     <tr key={p.id}>
                       <td>
                         <input
@@ -802,14 +882,14 @@ export default function AdminCatalogPage() {
                             className="btn-link-store"
                             title="Asignar este producto a un supermercado"
                           >
-                            🏪 Tienda
+                            <Store size={14} aria-hidden="true" /><span>Tienda</span>
                           </button>
                           <button
                             onClick={() => abrirEditarProducto(p)}
                             className="btn-edit"
                             title="Editar producto maestro"
                           >
-                            ✏️
+                            <Pencil size={14} aria-hidden="true" />
                           </button>
                           <button
                             onClick={() =>
@@ -822,7 +902,7 @@ export default function AdminCatalogPage() {
                             className="btn-delete"
                             title="Eliminar producto"
                           >
-                            🗑️
+                            <Trash2 size={14} aria-hidden="true" />
                           </button>
                         </div>
                       </td>
@@ -832,6 +912,13 @@ export default function AdminCatalogPage() {
               </table>
             )}
           </div>
+          <ProductPagination
+            page={paginaProductos}
+            totalPages={Math.ceil(productosFiltrados.length / ADMIN_TABLE_PAGE_SIZE)}
+            onPageChange={setPaginaProductos}
+            disabled={loading || procesando}
+            ariaLabel="Paginación del catálogo maestro"
+          />
         </div>
       )}
 
@@ -842,13 +929,16 @@ export default function AdminCatalogPage() {
         <div className="tab-content">
           <div className="action-bar">
             <div className="filters-group">
-              <input
-                type="text"
-                placeholder="Buscar producto asignado..."
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-                className="input-search"
-              />
+              <label className="catalog-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="text"
+                  placeholder="Buscar producto asignado..."
+                  value={filtroTexto}
+                  onChange={(e) => setFiltroTexto(e.target.value)}
+                  className="input-search"
+                />
+              </label>
               <select
                 value={filtroSuperId}
                 onChange={(e) => setFiltroSuperId(e.target.value)}
@@ -862,14 +952,15 @@ export default function AdminCatalogPage() {
             </div>
 
             <button onClick={() => abrirVincularTienda()} className="btn-primary-action">
-              + Vincular Producto a Tienda
+              <Plus size={16} aria-hidden="true" />
+              <span>Vincular Producto a Tienda</span>
             </button>
           </div>
 
           <div className="table-wrapper">
             {tiendasFiltradas.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-icon">🏪</span>
+                <Store className="empty-icon" size={28} aria-hidden="true" />
                 <p>No hay asignaciones de productos a supermercados.</p>
               </div>
             ) : (
@@ -885,7 +976,7 @@ export default function AdminCatalogPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tiendasFiltradas.map((pt) => (
+                  {tiendasPagina.map((pt) => (
                     <tr key={pt.id}>
                       <td className="cell-id">#{pt.id}</td>
                       <td>
@@ -898,7 +989,7 @@ export default function AdminCatalogPage() {
                       <td className="cell-url">
                         {pt.urlEspecifica ? (
                           <a href={pt.urlEspecifica} target="_blank" rel="noopener noreferrer" className="url-link">
-                            🔗 {pt.urlEspecifica.substring(0, 40)}...
+                            <Link size={14} aria-hidden="true" /> {pt.urlEspecifica.substring(0, 40)}...
                           </a>
                         ) : (
                           <span className="text-muted">Búsqueda dinámica</span>
@@ -906,7 +997,7 @@ export default function AdminCatalogPage() {
                       </td>
                       <td>
                         {pt.urlImagen ? (
-                          <span className="img-badge">📷 Sí</span>
+                          <span className="img-badge"><Image size={14} aria-hidden="true" /> Sí</span>
                         ) : (
                           <span className="text-muted">No</span>
                         )}
@@ -923,7 +1014,7 @@ export default function AdminCatalogPage() {
                           className="btn-delete"
                           title="Eliminar asignación"
                         >
-                          🗑️
+                          <Trash2 size={14} aria-hidden="true" />
                         </button>
                       </td>
                     </tr>
@@ -932,6 +1023,13 @@ export default function AdminCatalogPage() {
               </table>
             )}
           </div>
+          <ProductPagination
+            page={paginaTiendas}
+            totalPages={Math.ceil(tiendasFiltradas.length / ADMIN_TABLE_PAGE_SIZE)}
+            onPageChange={setPaginaTiendas}
+            disabled={loading || procesando}
+            ariaLabel="Paginación de asignaciones a supermercados"
+          />
         </div>
       )}
 
@@ -942,7 +1040,7 @@ export default function AdminCatalogPage() {
         <div className="modal-overlay" onClick={() => !procesando && setModalCategoria(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-icon">🏷️</span>
+              <span className="modal-icon"><Tags size={20} aria-hidden="true" /></span>
               <h3>{categoriaEditando ? 'Modificar Categoría' : 'Nueva Categoría Comercial'}</h3>
             </div>
 
@@ -972,7 +1070,7 @@ export default function AdminCatalogPage() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-modal-confirm btn-modal-success" disabled={procesando}>
-                  {procesando ? 'Guardando...' : categoriaEditando ? '💾 Actualizar' : '💾 Crear Categoría'}
+                  {procesando ? 'Guardando...' : <><Save size={16} aria-hidden="true" /> {categoriaEditando ? 'Actualizar' : 'Crear Categoría'}</>}
                 </button>
               </div>
             </form>
@@ -987,7 +1085,7 @@ export default function AdminCatalogPage() {
         <div className="modal-overlay" onClick={() => !procesando && setModalCriterio(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-icon">🔎</span>
+              <span className="modal-icon"><Bot size={20} aria-hidden="true" /></span>
               <h3>{criterioEditando ? 'Modificar Criterio de Scraping' : 'Nuevo Criterio de Búsqueda'}</h3>
             </div>
 
@@ -1034,7 +1132,7 @@ export default function AdminCatalogPage() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-modal-confirm btn-modal-success" disabled={procesando}>
-                  {procesando ? 'Guardando...' : criterioEditando ? '💾 Actualizar' : '💾 Guardar Criterio'}
+                  {procesando ? 'Guardando...' : <><Save size={16} aria-hidden="true" /> {criterioEditando ? 'Actualizar' : 'Guardar Criterio'}</>}
                 </button>
               </div>
             </form>
@@ -1049,7 +1147,7 @@ export default function AdminCatalogPage() {
         <div className="modal-overlay" onClick={() => !procesando && setModalProducto(false)}>
           <div className="modal-card modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-icon">📦</span>
+              <span className="modal-icon"><Package size={20} aria-hidden="true" /></span>
               <h3>{productoEditando ? 'Modificar Producto Maestro' : 'Registrar Producto Maestro'}</h3>
             </div>
 
@@ -1148,7 +1246,7 @@ export default function AdminCatalogPage() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-modal-confirm btn-modal-success" disabled={procesando}>
-                  {procesando ? 'Guardando...' : productoEditando ? '💾 Actualizar' : '💾 Guardar Producto'}
+                  {procesando ? 'Guardando...' : <><Save size={16} aria-hidden="true" /> {productoEditando ? 'Actualizar' : 'Guardar Producto'}</>}
                 </button>
               </div>
             </form>
@@ -1163,7 +1261,7 @@ export default function AdminCatalogPage() {
         <div className="modal-overlay" onClick={() => !procesando && setModalVincular(false)}>
           <div className="modal-card modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-icon">🏪</span>
+              <span className="modal-icon"><Store size={20} aria-hidden="true" /></span>
               <h3>Asignar Producto Maestro a Supermercado</h3>
             </div>
 
@@ -1241,7 +1339,7 @@ export default function AdminCatalogPage() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-modal-confirm btn-modal-success" disabled={procesando}>
-                  {procesando ? 'Guardando...' : '🔗 Asignar a Supermercado'}
+                  {procesando ? 'Guardando...' : <><Link size={16} aria-hidden="true" /> Asignar a Supermercado</>}
                 </button>
               </div>
             </form>
@@ -1254,19 +1352,23 @@ export default function AdminCatalogPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       {modalEliminar && (
         <div className="modal-overlay" onClick={() => !procesando && setModalEliminar(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card modal-delete-confirmation" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-icon">⚠️</span>
+              <span className="modal-icon"><AlertTriangle size={20} aria-hidden="true" /></span>
               <h3>Confirmar Eliminación</h3>
             </div>
 
             <div className="modal-body">
               <p>
                 ¿Estás seguro de que deseas eliminar permanentemente{' '}
-                <strong>"{modalEliminar.nombre}"</strong> de la base de datos?
+                <strong>{modalEliminar.tipo === 'PRODUCTOS_SELECCIONADOS' ? modalEliminar.nombre : `"${modalEliminar.nombre}"`}</strong>
+                {modalEliminar.tipo === 'PRODUCTOS_SELECCIONADOS'
+                  ? ' del catálogo maestro?'
+                  : ' de la base de datos?'}
               </p>
               <div className="warning-notice">
-                ⚠️ Esta acción no se puede deshacer y afectará las consultas del Scraper y el Catálogo.
+                <AlertTriangle size={16} aria-hidden="true" />
+                <span>Esta acción no se puede deshacer y afectará las consultas del Scraper y el Catálogo.</span>
               </div>
             </div>
 
@@ -1285,7 +1387,9 @@ export default function AdminCatalogPage() {
                 className="btn-modal-confirm btn-modal-danger"
                 disabled={procesando}
               >
-                {procesando ? 'Eliminando...' : 'Sí, Eliminar'}
+                {procesando
+                  ? 'Eliminando...'
+                  : <><Trash2 size={16} aria-hidden="true" /> Sí, eliminar</>}
               </button>
             </div>
           </div>

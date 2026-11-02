@@ -14,6 +14,7 @@ export interface ProductPaginationProps {
   pageSize?: number;
   onPageChange: (newPage: number) => void;
   disabled?: boolean;
+  ariaLabel?: string;
 }
 
 export const ProductPagination: React.FC<ProductPaginationProps> = ({
@@ -21,9 +22,8 @@ export const ProductPagination: React.FC<ProductPaginationProps> = ({
   totalPages,
   onPageChange,
   disabled = false,
+  ariaLabel = 'Paginación de catálogo de productos',
 }) => {
-  if (totalPages <= 1) return null;
-
   // Generación de ventana deslizante de páginas (0-indexed)
   const visiblePages = useMemo(() => {
     if (totalPages <= 7) {
@@ -63,8 +63,10 @@ export const ProductPagination: React.FC<ProductPaginationProps> = ({
     return pages;
   }, [page, totalPages]);
 
+  if (totalPages <= 1) return null;
+
   return (
-    <nav className="pagination-wrapper" aria-label="Paginación de catálogo de productos">
+    <nav className="pagination-wrapper" aria-label={ariaLabel}>
       {/* Dock flotante de navegación */}
       <div className="pagination-dock" role="toolbar" aria-label="Controles de navegación de página">
         {/* Botón Ir a primera página */}
