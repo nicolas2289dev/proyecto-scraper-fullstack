@@ -17,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { listaApi } from '../api/listaApi';
-import type { ListaCompraDetalle, OptimizacionCompra } from '../types/lists.types';
+import type { ListaCompraDetalle } from '../types/lists.types';
 import { getSupermarketLogo } from '../../products/utils/supermarketLogos';
 import '../styles/listDetail.css';
 
@@ -27,7 +27,6 @@ export function ListDetailPage() {
   const [list, setList] = useState<ListaCompraDetalle | null>(null);
   const [loading, setLoading] = useState(true);
   const [optimizing, setOptimizing] = useState(false);
-  const [optimizationResult, setOptimizationResult] = useState<OptimizacionCompra | null>(null);
   const [errorModal, setErrorModal] = useState<{
     visible: boolean;
     title: string;
@@ -79,7 +78,9 @@ export function ListDetailPage() {
     try {
       setOptimizing(true);
       const result = await listaApi.getCircuitoOptimo(listaId);
-      setOptimizationResult(result);
+      navigate(`/mis-listas/${listaId}/optimizacion`, {
+        state: { optimizationResult: result, listItems: list?.items ?? [] },
+      });
     } catch (err) {
       console.error('Error optimizing list:', err);
       setErrorModal({
@@ -102,7 +103,6 @@ export function ListDetailPage() {
       onConfirm: async () => {
         try {
           await listaApi.removeItem(listaId, itemId);
-          setOptimizationResult(null);
           fetchListDetail();
           setConfirmModal((prev) => ({ ...prev, visible: false }));
         } catch (err) {
@@ -279,77 +279,6 @@ export function ListDetailPage() {
           )}
         </section>
 
-        {optimizationResult && (
-          <section className="list-detail-optimization-section">
-            <h2 className="list-detail-opt-header">
-              ✅ Resultado de Optimización
-            </h2>
-
-            <div className="list-detail-kpi-grid">
-              <div className="list-detail-kpi-card">
-                <span className="list-detail-kpi-label">Total Óptimo</span>
-                <p className="list-detail-kpi-val">
-                  ${optimizationResult.totalOptimo.toLocaleString('es-AR')}
-                </p>
-              </div>
-              <div className="list-detail-kpi-card">
-                <span className="list-detail-kpi-label">Ahorro Total</span>
-                <p className="list-detail-kpi-val savings">
-                  ${optimizationResult.totalAhorrado.toLocaleString('es-AR')}
-                </p>
-              </div>
-              <div className="list-detail-kpi-card warning">
-                <span className="list-detail-kpi-label">Total Lista (Original)</span>
-                <p className="list-detail-kpi-val expensive">
-                  ${optimizationResult.totalMasCaro.toLocaleString('es-AR')}
-                </p>
-              </div>
-            </div>
-
-            <h3 className="list-detail-roadmap-title">
-              📍 Hoja de Ruta (Dónde comprar)
-            </h3>
-            {optimizationResult.hojaDeRuta.map((tienda) => (
-              <div key={tienda.supermercadoId} className="list-detail-store-card">
-                <h4 className="list-detail-store-name">{tienda.supermercadoNombre}</h4>
-                <ul className="list-detail-store-items">
-                  {tienda.productos.map((p) => (
-                    <li key={p.productoId} className="list-detail-store-item">
-                      <strong>{p.productoNombre}</strong> ({p.marca}) x {p.cantidad} -
-                      <span className="list-detail-store-item-price">
-                        {' '}
-                        ${p.subtotal.toLocaleString('es-AR')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="list-detail-store-subtotal">
-                  <strong>
-                    Subtotal en tienda: ${tienda.subtotalTienda.toLocaleString('es-AR')}
-                  </strong>
-                </div>
-              </div>
-            ))}
-
-            {optimizationResult.productosSinPrecio.length > 0 && (
-              <div className="list-detail-missing-box">
-                <h4 className="list-detail-missing-title">
-                  ⚠️ Productos sin precio disponible
-                </h4>
-                <p className="list-detail-missing-desc">
-                  No pudimos encontrar precios para estos productos en ningún supermercado:
-                </p>
-                <ul className="list-detail-missing-list">
-                  {optimizationResult.productosSinPrecio.map((p) => (
-                    <li key={p.productoId}>
-                      {p.productoNombre} ({p.marca})
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
-        )}
       </div>
 
       {/* Error Modal */}

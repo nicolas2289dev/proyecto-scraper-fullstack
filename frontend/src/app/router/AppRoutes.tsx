@@ -3,7 +3,7 @@ import { LoginPage, RegisterPage } from '@/features/auth';
 import { MainLayout } from '@/app/layouts/MainLayout';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminRoute } from '@/app/components/AdminRoute';
-import { MyListsPage, ListDetailPage } from '@/features/lists';
+import { MyListsPage, ListDetailPage, OptimizationResultsPage } from '@/features/lists';
 import { HomePage } from '@/features/products';
 import { AdminDashboardPage, AdminUsersPage, AdminCatalogPage } from '@/features/admin';
 
@@ -40,6 +40,17 @@ export function AppRoutes() {
           <ProtectedRoute>
             <MainLayout>
               <ListDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/mis-listas/:id/optimizacion"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <OptimizationResultsPage />
             </MainLayout>
           </ProtectedRoute>
         }
