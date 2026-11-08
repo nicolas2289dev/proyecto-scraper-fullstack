@@ -1,14 +1,10 @@
 .optimization-results-page.container {
-  max-width: 960px;
-  margin: clamp(1.5rem, 4vw, 3rem) auto;
-  padding: 0 clamp(1rem, 3vw, 1.5rem) 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.3rem clamp(1rem, 3vw, 1.5rem) 3rem;
   background: transparent;
   border: 0;
   box-shadow: none;
-}
-
-.optimization-results-header {
-  margin-bottom: 1rem;
 }
 
 .optimization-results-back {
@@ -16,21 +12,22 @@
   align-items: center;
   gap: 0.45rem;
   min-height: 34px;
-  margin-bottom: 1rem;
-  padding: 0.35rem 0.7rem;
-  border: 1px solid var(--border-subtle);
+  /* margin-bottom: 0.5rem; */
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(0, 230, 153, 0.25);
   border-radius: 10px;
-  background: rgba(148, 163, 184, 0.08);
-  color: var(--text-dark);
+  background: rgba(2, 24, 22, 0.45);
+  color: #cbd5e1;
   font-size: 0.84rem;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition: all 180ms ease;
 }
 
 .optimization-results-back:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(0, 230, 153, 0.12);
+  border-color: rgba(0, 230, 153, 0.5);
+  color: #ffffff;
 }
 
 .optimization-results-eyebrow {

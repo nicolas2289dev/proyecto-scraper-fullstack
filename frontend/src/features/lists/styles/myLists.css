@@ -3,9 +3,9 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .my-lists-container {
-  max-width: 960px;
-  margin: clamp(1.5rem, 4vw, 3rem) auto;
-  padding: 0 clamp(1rem, 3vw, 1.5rem);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.3rem clamp(1rem, 3vw, 1.5rem) 4rem;
 }
 
 /* ─── Encabezado Principal de la Página ────────────────────────────────── */

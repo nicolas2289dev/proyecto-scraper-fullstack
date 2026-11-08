@@ -21,6 +21,7 @@ import type { ListaCompraDetalle } from '../types/lists.types';
 import { getSupermarketLogo } from '../../products/utils/supermarketLogos';
 import '../styles/listDetail.css';
 
+
 export function ListDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -139,10 +140,10 @@ export function ListDetailPage() {
       <div className="list-detail-top-nav">
         <button
           type="button"
-          className="btn list-detail-btn-back"
+          className="list-detail-btn-back"
           onClick={() => navigate('/mis-listas')}
         >
-          <ArrowLeft size={16} aria-hidden="true" />
+          <ArrowLeft size={13} aria-hidden="true" />
           <span>Volver a mis listas</span>
         </button>
         <h1 className="list-detail-title">
@@ -278,7 +279,6 @@ export function ListDetailPage() {
             </div>
           )}
         </section>
-
       </div>
 
       {/* Error Modal */}

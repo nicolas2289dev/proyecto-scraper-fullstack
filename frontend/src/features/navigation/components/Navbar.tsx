@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { useAuthStore, isAdmin } from '@/features/auth';
 import { listaApi } from '@/features/lists/api/listaApi';
 import CartBrandIcon from './CartBrandIcon';
@@ -176,7 +176,7 @@ export const Navbar: React.FC = () => {
             </button>
 
             {/* Botón Favoritos */}
-            <button
+            {/* <button
               type="button"
               className="navbar-action-btn"
               onClick={() => {
@@ -190,7 +190,7 @@ export const Navbar: React.FC = () => {
               aria-label="Mis Favoritos"
             >
               <Heart size={20} />
-            </button>
+            </button> */}
 
             {/* Widget Mi Lista */}
             <button
