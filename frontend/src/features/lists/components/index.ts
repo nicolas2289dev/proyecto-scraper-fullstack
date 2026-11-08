@@ -13,3 +13,4 @@ export * from './ShoppingCircuitRouteCard';
 export * from './ShoppingCircuitTipsCard';
 export * from './ShoppingCircuitMapModal';
 export * from './OptimizationHeroBanner';
+export * from './OptimizePurchaseButton';

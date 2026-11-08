@@ -8,7 +8,6 @@ import {
   Hash,
   Package,
   Plus,
-  Rocket,
   ShoppingBasket,
   Star,
   Store,
@@ -19,6 +18,7 @@ import {
 import { listaApi } from '../api/listaApi';
 import type { ListaCompraDetalle } from '../types/lists.types';
 import { getSupermarketLogo } from '../../products/utils/supermarketLogos';
+import { OptimizePurchaseButton } from '../components';
 import '../styles/listDetail.css';
 
 
@@ -152,10 +152,6 @@ export function ListDetailPage() {
             <Star size={20} fill="currentColor" aria-label="Lista favorita" />
           )}
         </h1>
-        <Link to="/home" className="list-detail-btn-add">
-          <Plus size={16} aria-hidden="true" />
-          <span>Agregar productos</span>
-        </Link>
       </div>
 
       <div className="list-detail-content-grid">
@@ -176,15 +172,11 @@ export function ListDetailPage() {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              className="btn list-detail-btn-optimize"
+            <OptimizePurchaseButton
               onClick={handleOptimize}
-              disabled={optimizing || list.items.length === 0}
-            >
-              <Rocket size={16} aria-hidden="true" />
-              <span>{optimizing ? 'Optimizando...' : 'Optimizar compra'}</span>
-            </button>
+              optimizing={optimizing}
+              itemCount={list.items.length}
+            />
           </div>
 
           {list.items.length === 0 ? (

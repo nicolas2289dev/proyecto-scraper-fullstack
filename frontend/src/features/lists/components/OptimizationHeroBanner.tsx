@@ -1,20 +1,18 @@
 import React from 'react';
-import { ArrowLeft, TrendingUp } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface OptimizationHeroBannerProps {
   nombreLista?: string;
-  totalAhorrado: number;
+  totalAhorrado?: number;
   className?: string;
   onBack?: () => void;
 }
 
 export const OptimizationHeroBanner: React.FC<OptimizationHeroBannerProps> = ({
   nombreLista,
-  totalAhorrado,
   className = '',
   onBack,
 }) => {
-  const formattedSavings = Number(totalAhorrado || 0).toLocaleString('es-AR');
   const title = nombreLista ? `Optimización de ${nombreLista}` : 'Optimización de compra';
 
   return (
