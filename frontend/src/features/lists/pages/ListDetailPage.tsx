@@ -2,12 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   AlertTriangle,
-  ArrowLeft,
   BadgeDollarSign,
   CalendarDays,
   Hash,
   Package,
-  Plus,
   ShoppingBasket,
   Star,
   Store,
@@ -138,14 +136,6 @@ export function ListDetailPage() {
   return (
     <div className="list-detail-container container">
       <div className="list-detail-top-nav">
-        <button
-          type="button"
-          className="list-detail-btn-back"
-          onClick={() => navigate('/mis-listas')}
-        >
-          <ArrowLeft size={13} aria-hidden="true" />
-          <span>Volver a mis listas</span>
-        </button>
         <h1 className="list-detail-title">
           {list.nombreLista}
           {list.favorita && (
@@ -197,7 +187,7 @@ export function ListDetailPage() {
                     <th><Hash size={14} aria-hidden="true" /><span>Cantidad</span></th>
                     <th><BadgeDollarSign size={14} aria-hidden="true" /><span>Precio estimado</span></th>
                     <th><Store size={14} aria-hidden="true" /><span>Supermercado</span></th>
-                    <th><span className="list-detail-visually-hidden">Acción</span><Trash2 size={14} aria-hidden="true" /></th>
+                    <th><Trash2 size={14} aria-hidden="true" /><span>Acción</span></th>
                   </tr>
                 </thead>
                 <tbody>

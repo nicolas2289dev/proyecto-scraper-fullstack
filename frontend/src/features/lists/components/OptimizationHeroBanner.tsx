@@ -13,7 +13,7 @@ export const OptimizationHeroBanner: React.FC<OptimizationHeroBannerProps> = ({
   className = '',
   onBack,
 }) => {
-  const title = nombreLista ? `Optimización de ${nombreLista}` : 'Optimización de compra';
+  const title = nombreLista ? `Circuito de Compra: ${nombreLista}` : 'Circuito de Compra';
 
   return (
     <div
