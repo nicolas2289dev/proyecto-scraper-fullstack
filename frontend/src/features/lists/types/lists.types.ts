@@ -51,3 +51,37 @@ export interface OptimizacionCompra {
   hojaDeRuta: TiendaOptima[];
   productosSinPrecio: ProductoOptimo[];
 }
+
+export interface Sucursal {
+  id: number;
+  supermercadoId: number;
+  supermercadoNombre: string;
+  nombreSucursal: string;
+  direccion: string;
+  ciudad: string;
+  latitud: number;
+  longitud: number;
+}
+
+export type TransportMode = 'driving' | 'walking';
+
+export interface GeoCoordinates {
+  lat: number;
+  lng: number;
+}
+
+export interface RouteStop {
+  orden: number;
+  tienda: TiendaOptima;
+  sucursal: Sucursal;
+  distanciaDesdeAnteriorKm: number;
+  distanciaAcumuladaKm: number;
+}
+
+export interface AddressSuggestion {
+  displayName: string;
+  shortName: string;
+  lat: number;
+  lng: number;
+}
+
