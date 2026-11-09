@@ -1,17 +1,26 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { ShoppingCircuitRouteCard } from './ShoppingCircuitRouteCard';
 
 interface OptimizationHeroBannerProps {
   nombreLista?: string;
   totalAhorrado?: number;
   className?: string;
   onBack?: () => void;
+  paradasCount?: number;
+  nombresTiendas?: string;
+  tiempoEstimadoMin?: number;
+  distanciaTotalKm?: number;
 }
 
 export const OptimizationHeroBanner: React.FC<OptimizationHeroBannerProps> = ({
   nombreLista,
   className = '',
   onBack,
+  paradasCount = 2,
+  nombresTiendas = 'Supermercados sugeridos',
+  tiempoEstimadoMin,
+  distanciaTotalKm,
 }) => {
   const title = nombreLista ? `Circuito de Compra: ${nombreLista}` : 'Circuito de Compra';
 
@@ -57,16 +66,13 @@ export const OptimizationHeroBanner: React.FC<OptimizationHeroBannerProps> = ({
           </p>
         </div>
 
-        {/* Tarjeta de Ahorro Máximo (Glass Pill) */}
-        {/* <div className="opt-hero-savings-card">
-          <span className="opt-hero-savings-label">Ahorrá hasta</span>
-          <div className="opt-hero-savings-value-row">
-            <span className="opt-hero-savings-amount">
-              $ {formattedSavings}
-            </span>
-            <TrendingUp className="opt-hero-savings-arrow" size={24} strokeWidth={2.8} />
-          </div>
-        </div> */}
+        {/* Tarjeta de Estrategia de Compra Algorítmica (Informativa y estática) */}
+        <ShoppingCircuitRouteCard
+          paradasCount={paradasCount}
+          nombresTiendas={nombresTiendas}
+          tiempoEstimadoMin={tiempoEstimadoMin}
+          distanciaTotalKm={distanciaTotalKm}
+        />
       </div>
     </div>
   );

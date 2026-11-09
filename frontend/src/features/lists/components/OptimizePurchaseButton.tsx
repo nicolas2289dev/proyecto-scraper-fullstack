@@ -48,7 +48,7 @@ export const OptimizePurchaseButton: React.FC<OptimizePurchaseButtonProps> = ({
         onClick={onClick}
         disabled={isDisabled}
         aria-busy={optimizing}
-        aria-label={optimizing ? 'Optimizando compra...' : 'Optimizar compra'}
+        aria-label={optimizing ? 'Optimizando...' : 'Optimizar compra'}
       >
         {optimizing ? (
           <>
@@ -57,7 +57,7 @@ export const OptimizePurchaseButton: React.FC<OptimizePurchaseButtonProps> = ({
               className="list-detail-optimize-spinner"
               aria-hidden="true"
             />
-            <span>Optimizando compra...</span>
+            <span>Optimizando...</span>
           </>
         ) : (
           <>

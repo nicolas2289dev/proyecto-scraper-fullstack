@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import type { OptimizacionCompra, ItemLista } from '../types/lists.types';
 import { useShoppingCircuitProgress } from '../hooks/useShoppingCircuitProgress';
+import { useShoppingRoute } from '../hooks/useShoppingRoute';
 import { OptimizationHeroBanner } from './OptimizationHeroBanner';
 import { ShoppingCircuitTopStepper } from './ShoppingCircuitTopStepper';
 import { ShoppingCircuitHeroBanner } from './ShoppingCircuitHeroBanner';
@@ -42,24 +43,35 @@ export const ShoppingCircuitView: React.FC<ShoppingCircuitViewProps> = ({
     progress,
   } = useShoppingCircuitProgress(listaId, hojaDeRuta);
 
+  const route = useShoppingRoute(hojaDeRuta);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const nombresTiendas = useMemo(() => {
+    if (route.orderedStops.length > 0) {
+      return route.orderedStops.map((s) => s.tienda.supermercadoNombre).join(' → ');
+    }
     return hojaDeRuta.map((s) => s.supermercadoNombre).join(', ');
-  }, [hojaDeRuta]);
+  }, [route.orderedStops, hojaDeRuta]);
 
-  const supermercadoPrincipal = hojaDeRuta[0]?.supermercadoNombre || 'Supermercado';
+  const supermercadoPrincipal =
+    route.orderedStops[0]?.tienda.supermercadoNombre ||
+    hojaDeRuta[0]?.supermercadoNombre ||
+    'Supermercado';
 
   return (
     <section
       className="opt-circuit-section"
       aria-label="Circuito y optimización de compra interactiva"
     >
-      {/* Hero Banner de Optimización con ahorro máximo */}
+      {/* Hero Banner de Optimización con recorrido inteligente */}
       <OptimizationHeroBanner
         nombreLista={nombreLista}
         totalAhorrado={totalAhorrado}
         onBack={handleBack}
+        paradasCount={hojaDeRuta.length}
+        nombresTiendas={nombresTiendas}
+        tiempoEstimadoMin={route.totalDurationMin}
+        distanciaTotalKm={route.totalDistanceKm}
       />
 
       {/* 1. Stepper Superior estilo tracker de proceso */}
@@ -78,6 +90,10 @@ export const ShoppingCircuitView: React.FC<ShoppingCircuitViewProps> = ({
           <ShoppingCircuitHeroBanner
             paradasCount={hojaDeRuta.length}
             supermercadoPrincipal={supermercadoPrincipal}
+            nearestStop={route.orderedStops[0]}
+            totalDistanceKm={route.totalDistanceKm}
+            totalDurationMin={route.totalDurationMin}
+            orderedStoreNames={nombresTiendas}
             onOpenMapModal={() => setIsMapModalOpen(true)}
           />
 
@@ -115,6 +131,9 @@ export const ShoppingCircuitView: React.FC<ShoppingCircuitViewProps> = ({
             totalAhorrado={totalAhorrado}
             totalMasCaro={totalMasCaro}
             hojaDeRuta={hojaDeRuta}
+            orderedStops={route.orderedStops}
+            totalDistanceKm={route.totalDistanceKm}
+            totalDurationMin={route.totalDurationMin}
             onOpenMapModal={() => setIsMapModalOpen(true)}
           />
 
@@ -123,11 +142,26 @@ export const ShoppingCircuitView: React.FC<ShoppingCircuitViewProps> = ({
         </div>
       </div>
 
-      {/* Modal interactivo de recorrido en mapa */}
+      {/* Modal interactivo de recorrido en mapa con geolocalización y ruteo OSRM */}
       <ShoppingCircuitMapModal
         isOpen={isMapModalOpen}
         onClose={() => setIsMapModalOpen(false)}
         hojaDeRuta={hojaDeRuta}
+        userLocation={route.userLocation}
+        locationSource={route.locationSource}
+        locationLabel={route.locationLabel}
+        gpsLoading={route.gpsLoading}
+        gpsError={route.gpsError}
+        transportMode={route.transportMode}
+        onChangeTransportMode={route.setTransportMode}
+        orderedStops={route.orderedStops}
+        polyline={route.polyline}
+        legs={route.legs}
+        totalDistanceKm={route.totalDistanceKm}
+        totalDurationMin={route.totalDurationMin}
+        googleMapsUrl={route.googleMapsUrl}
+        onRequestLiveGps={route.requestLiveGps}
+        onSelectManualOrigin={route.setManualOrigin}
       />
     </section>
   );
