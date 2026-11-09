@@ -1,0 +1,79 @@
+import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { ShoppingCircuitRouteCard } from './ShoppingCircuitRouteCard';
+
+interface OptimizationHeroBannerProps {
+  nombreLista?: string;
+  totalAhorrado?: number;
+  className?: string;
+  onBack?: () => void;
+  paradasCount?: number;
+  nombresTiendas?: string;
+  tiempoEstimadoMin?: number;
+  distanciaTotalKm?: number;
+}
+
+export const OptimizationHeroBanner: React.FC<OptimizationHeroBannerProps> = ({
+  nombreLista,
+  className = '',
+  onBack,
+  paradasCount = 2,
+  nombresTiendas = 'Supermercados sugeridos',
+  tiempoEstimadoMin,
+  distanciaTotalKm,
+}) => {
+  const title = nombreLista ? `Circuito de Compra: ${nombreLista}` : 'Circuito de Compra';
+
+  return (
+    <div
+      className={`opt-hero-banner-container ${className}`.trim()}
+      role="region"
+      aria-label={`Banner de ${title}`}
+    >
+      {/* 1. Botón 'Volver al detalle' estilo hero-badge arriba */}
+      {onBack && (
+        <div className="opt-hero-top-bar">
+          <button
+            type="button"
+            onClick={onBack}
+            className="opt-hero-badge-btn"
+            aria-label="Volver al detalle de la lista"
+          >
+            <ArrowLeft size={13} className="opt-hero-badge-icon" />
+            <span>Volver al detalle</span>
+          </button>
+        </div>
+      )}
+
+      {/* 2. Cuerpo del Banner debajo */}
+      <div className="opt-hero-banner-body">
+        {/* Icono de mapa personalizado con resplandor neón */}
+        <div className="opt-hero-icon-wrap" aria-hidden="true">
+          <img
+            src="/images/icono-punto-mapa-banner.png"
+            alt="Punto de ubicación"
+            className="opt-hero-pin-img"
+          />
+        </div>
+
+        {/* Contenido textual */}
+        <div className="opt-hero-text-wrap">
+          <h1 className="opt-hero-banner-title opt-hero-banner-title-size">
+            {title}
+          </h1>
+          <p className="opt-hero-banner-desc">
+            Una ruta interactiva para comprar de manera inteligente, ahorrando tiempo y dinero
+          </p>
+        </div>
+
+        {/* Tarjeta de Estrategia de Compra Algorítmica (Informativa y estática) */}
+        <ShoppingCircuitRouteCard
+          paradasCount={paradasCount}
+          nombresTiendas={nombresTiendas}
+          tiempoEstimadoMin={tiempoEstimadoMin}
+          distanciaTotalKm={distanciaTotalKm}
+        />
+      </div>
+    </div>
+  );
+};

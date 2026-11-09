@@ -49,12 +49,13 @@ Cuenta con inyección dinámica de token y logout mediante `setApiAuthHandlers` 
 - `GET /listas/{id}/circuito-optimo`: Cálculo del circuito óptimo de compra multitienda.
 
 #### Administración (`src/features/admin/api/adminApi.ts`)
-- `GET /admin/dashboard/stats`: Métricas generales del sistema.
-- `GET /admin/usuarios`: Listado y filtrado de usuarios registrados.
-- `PUT /admin/usuarios/{id}/rol`: Modificación de roles de usuario.
-- `PATCH /admin/usuarios/{id}/estado`: Bloqueo o activación de cuenta de usuario.
-- `GET /admin/catalogo/resumen`: Estadísticas de productos y cobertura de scraping.
-- `POST /admin/catalogo/ejecutar-scraper`: Disparo manual de scraping por supermercado.
+- `GET /usuarios`: Listado de usuarios.
+- `GET /usuarios/roles`: Listado de roles disponibles.
+- `POST /usuarios`: Creación de cuenta desde el panel.
+- `POST /usuarios/asignar/roles`: Asignación de rol a una cuenta.
+- `PATCH /usuarios/{id}/estado`: Habilitación o inhabilitación de una cuenta.
+- `DELETE /usuarios/{id}`: Eliminación permanente de una cuenta, incluidos sus roles, listas de compra e ítems. Requiere rol administrador y no permite eliminar la cuenta autenticada.
+- Gestión del catálogo y scraper mediante `/categorias`, `/productos`, `/productos-tienda`, `/supermercados` y `/criterios-busqueda`; las acciones de escritura y eliminación están protegidas para administradores.
 
 ## Estado Global (Zustand)
 Gestionado en `src/features/auth/store/authStore.ts` (con re-export compatible en `src/store/authStore.ts`):

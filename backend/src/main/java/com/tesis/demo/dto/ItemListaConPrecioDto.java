@@ -19,4 +19,8 @@ public class ItemListaConPrecioDto {
     private BigDecimal precioTotal;
     private Long supermercadoId;
     private String supermercadoNombre;
+    private String varianteEspecifica;
+    private Double pesoValor;
+    private String pesoUnidad;
+    private String urlImagen;
 }

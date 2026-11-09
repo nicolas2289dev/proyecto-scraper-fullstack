@@ -50,6 +50,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/v1/productos/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/precios/buscar").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/supermercados/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/sucursales/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

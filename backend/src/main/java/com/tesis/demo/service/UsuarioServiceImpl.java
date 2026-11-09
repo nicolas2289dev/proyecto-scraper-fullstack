@@ -4,15 +4,21 @@ import com.tesis.demo.dto.AssignRoleDto;
 import com.tesis.demo.dto.RolDto;
 import com.tesis.demo.dto.UsuarioCreateDto;
 import com.tesis.demo.dto.UsuarioDto;
+import com.tesis.demo.exception.ConflictException;
+import com.tesis.demo.exception.ResourceNotFoundException;
+import com.tesis.demo.model.ListaCompra;
 import com.tesis.demo.model.Rol;
 import com.tesis.demo.model.Usuario;
 import com.tesis.demo.model.UsuarioRol;
 import com.tesis.demo.repository.RolRepository;
+import com.tesis.demo.repository.ItemListaRepository;
+import com.tesis.demo.repository.ListaCompraRepository;
 import com.tesis.demo.repository.UsuarioRepository;
 import com.tesis.demo.repository.UsuarioRolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,15 +29,21 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final UsuarioRolRepository usuarioRolRepository;
+    private final ListaCompraRepository listaCompraRepository;
+    private final ItemListaRepository itemListaRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository,
                               RolRepository rolRepository,
                               UsuarioRolRepository usuarioRolRepository,
+                              ListaCompraRepository listaCompraRepository,
+                              ItemListaRepository itemListaRepository,
                               PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.usuarioRolRepository = usuarioRolRepository;
+        this.listaCompraRepository = listaCompraRepository;
+        this.itemListaRepository = itemListaRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -107,6 +119,26 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario guardado = usuarioRepository.save(usuario);
         log.info("Estado de usuario actualizado exitosamente: id={}, nuevoEstado={}", id, estadoNormalizado);
         return toDto(guardado);
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id, String adminEmail) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
+
+        if (adminEmail != null && adminEmail.equalsIgnoreCase(usuario.getEmail())) {
+            throw new ConflictException("No puede eliminar su propia cuenta de administrador en sesión.");
+        }
+
+        List<ListaCompra> listas = listaCompraRepository.findByUsuario(usuario);
+        for (ListaCompra lista : listas) {
+            itemListaRepository.deleteByListaCompraId(lista.getId());
+        }
+        listaCompraRepository.deleteAll(listas);
+        usuarioRolRepository.deleteByUsuario(usuario);
+        usuarioRepository.delete(usuario);
+        log.info("Usuario eliminado por administrador: id={}, email={}", id, usuario.getEmail());
     }
 
     @Override

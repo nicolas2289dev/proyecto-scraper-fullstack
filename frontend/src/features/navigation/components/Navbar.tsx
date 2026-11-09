@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { useAuthStore, isAdmin } from '@/features/auth';
 import { listaApi } from '@/features/lists/api/listaApi';
 import CartBrandIcon from './CartBrandIcon';
@@ -55,7 +55,12 @@ export const Navbar: React.FC = () => {
   // Obtener conteo de ítems de la lista activa o favorita
   useEffect(() => {
     let isMounted = true;
-    if (isAuthenticated) {
+
+    const refreshActiveListCount = () => {
+      if (!isAuthenticated) {
+        if (isMounted) setActiveListItemsCount(0);
+        return;
+      }
       listaApi
         .getAll()
         .then((listas) => {
@@ -74,10 +79,14 @@ export const Navbar: React.FC = () => {
         .catch(() => {
           if (isMounted) setActiveListItemsCount(0);
         });
-    }
+    };
+
+    refreshActiveListCount();
+    window.addEventListener('ahorraya:list-updated', refreshActiveListCount);
 
     return () => {
       isMounted = false;
+      window.removeEventListener('ahorraya:list-updated', refreshActiveListCount);
     };
   }, [isAuthenticated]);
 
@@ -167,7 +176,7 @@ export const Navbar: React.FC = () => {
             </button>
 
             {/* Botón Favoritos */}
-            <button
+            {/* <button
               type="button"
               className="navbar-action-btn"
               onClick={() => {
@@ -181,7 +190,7 @@ export const Navbar: React.FC = () => {
               aria-label="Mis Favoritos"
             >
               <Heart size={20} />
-            </button>
+            </button> */}
 
             {/* Widget Mi Lista */}
             <button
@@ -196,7 +205,7 @@ export const Navbar: React.FC = () => {
                   <span className="navbar-list-badge">{activeListItemsCount}</span>
                 )}
               </div>
-              <span className="navbar-list-label">Mi lista</span>
+              <span className="navbar-list-label">Mis listas</span>
             </button>
 
             {/* Menú Desplegable de Usuario (Profile Dropdown) */}

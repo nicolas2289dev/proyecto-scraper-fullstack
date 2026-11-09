@@ -16,4 +16,20 @@ public class ItemListaDto {
     private Integer cantidad;
     private Long supermercadoId;
     private String supermercadoNombre;
+    private String varianteEspecifica;
+    private Double pesoValor;
+    private String pesoUnidad;
+    private String urlImagen;
+
+    public ItemListaDto(Long id, Long listaId, Long productoId, String productoNombre, String marca,
+                        Integer cantidad, Long supermercadoId, String supermercadoNombre) {
+        this.id = id;
+        this.listaId = listaId;
+        this.productoId = productoId;
+        this.productoNombre = productoNombre;
+        this.marca = marca;
+        this.cantidad = cantidad;
+        this.supermercadoId = supermercadoId;
+        this.supermercadoNombre = supermercadoNombre;
+    }
 }

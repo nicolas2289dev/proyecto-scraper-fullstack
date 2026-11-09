@@ -3,7 +3,7 @@ import { LoginPage, RegisterPage } from '@/features/auth';
 import { MainLayout } from '@/app/layouts/MainLayout';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminRoute } from '@/app/components/AdminRoute';
-import { MyListsPage, ListDetailPage } from '@/features/lists';
+import { MyListsPage, ListDetailPage, OptimizationResultsPage, ListsLayout } from '@/features/lists';
 import { HomePage } from '@/features/products';
 import { AdminDashboardPage, AdminUsersPage, AdminCatalogPage } from '@/features/admin';
 
@@ -28,22 +28,15 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <MainLayout>
-              <MyListsPage />
+              <ListsLayout />
             </MainLayout>
           </ProtectedRoute>
         }
-      />
-
-      <Route
-        path="/mis-listas/:id"
-        element={
-          <ProtectedRoute>
-            <MainLayout>
-              <ListDetailPage />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route index element={<MyListsPage />} />
+        <Route path=":id" element={<ListDetailPage />} />
+        <Route path=":id/optimizacion" element={<OptimizationResultsPage />} />
+      </Route>
 
       {/* Rutas de Administración (CU-09 y CU-10) */}
       <Route

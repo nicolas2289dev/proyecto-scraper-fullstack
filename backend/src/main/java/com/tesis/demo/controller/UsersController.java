@@ -45,6 +45,14 @@ public class UsersController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "Estado de usuario actualizado correctamente", actualizado));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRADOR')")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id, Principal principal) {
+        String adminEmail = principal != null ? principal.getName() : null;
+        usuarioService.eliminar(id, adminEmail);
+        return ResponseEntity.ok(ApiResponse.success("Usuario eliminado correctamente", null));
+    }
+
     @PostMapping("/asignar/roles")
     @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRADOR')")
     public ResponseEntity<ApiResponse<UsuarioDto>> asignarRol(@RequestBody AssignRoleDto dto) {
